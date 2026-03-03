@@ -39,6 +39,9 @@ dependencyResolutionManagement {
 
 ```groovy
 dependencies {
+    implementation 'xyz.doikki.android.dkplayer:dkplayer-java:3.3.7'
+    implementation 'xyz.doikki.android.dkplayer:player-ijk:3.3.7'
+    implementation 'xyz.doikki.android.dkplayer:player-exo:3.3.7'
     implementation 'com.github.1240444767:StarVideoPlayer:1.0.0'
 }
 ```

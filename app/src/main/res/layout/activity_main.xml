@@ -4,11 +4,19 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".MainActivity"
+    android:orientation="vertical">
     
     <com.star.play.StarVideoPlayer
         android:id="@+id/player"
         android:layout_width="match_parent"
         android:layout_height="250dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/go"
+        android:layout_gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="跳转短剧"/>
 
 </LinearLayout>

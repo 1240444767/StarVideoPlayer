@@ -8,6 +8,7 @@
 - **选集功能** - 剧集列表展示与快速切换，支持自定义适配器
 - **倍速播放** - 支持多档倍速（0.5x、0.75x、1.0x、1.25x、1.5x、2.0x）
 - **长按倍速** - 长按屏幕快速播放（默认3倍速，可自定义1.0x~10.0x）
+- **双击暂停/播放** - 双击屏幕切换播放/暂停状态
 - **定时关闭** - 支持30分钟、60分钟定时关闭
 - **跳过片头/片尾** - 自动跳过指定时间段
 - **画面比例调整** - 支持16:9、4:3、默认、填充、缩放、裁剪等模式
@@ -21,6 +22,7 @@
 - **自动旋转** - 支持根据设备方向自动切换横竖屏
 - **竖屏全屏** - 支持竖屏全屏模式，适合短剧场景
 - **按钮可见性控制** - 可控制底部和顶部各按钮的显示/隐藏
+- **短剧播放器** - 提供精简版播放器 `StarShortDramaPlayer`，隐藏选集/上下集按钮，默认使用 ExoPlayer 内核
 
 ## 引入方式
 
@@ -46,7 +48,7 @@ dependencies {
     implementation 'xyz.doikki.android.dkplayer:dkplayer-java:3.3.7'
     implementation 'xyz.doikki.android.dkplayer:player-ijk:3.3.7'
     implementation 'xyz.doikki.android.dkplayer:player-exo:3.3.7'
-    implementation 'com.github.1240444767:StarVideoPlayer:1.0.0'
+    implementation 'com.github.1240444767:StarVideoPlayer:1.3.0'
 }
 ```
 
@@ -63,6 +65,8 @@ dependencies {
 
 ### 2. 布局文件
 
+#### 标准播放器（带选集功能）
+
 ```xml
 <com.star.play.StarVideoPlayer
     android:id="@+id/player"
@@ -70,7 +74,18 @@ dependencies {
     android:layout_height="200dp" />
 ```
 
+#### 短剧播放器（精简版，无选集/上下集按钮）
+
+```xml
+<com.star.play.StarShortDramaPlayer
+    android:id="@+id/player"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" />
+```
+
 ### 3. 基础使用
+
+#### StarVideoPlayer 使用
 
 ```java
 public class MainActivity extends AppCompatActivity {
@@ -94,6 +109,54 @@ public class MainActivity extends AppCompatActivity {
         videoView.addDefaultControlComponent("视频标题", false);
         
         // 开始播放
+        videoView.start();
+    }
+    
+    @Override
+    protected void onPause() {
+        super.onPause();
+        videoView.pause();
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        videoView.resume();
+    }
+    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        videoView.release();
+    }
+    
+    @Override
+    public void onBackPressed() {
+        if (!videoView.onBackPressed()) {
+            super.onBackPressed();
+        }
+    }
+}
+```
+
+#### StarShortDramaPlayer 使用（短剧专用）
+
+`StarShortDramaPlayer` 继承自 `StarVideoPlayer`，自动隐藏了选集、上一集、下一集按钮，并默认使用 ExoPlayer 内核。
+
+```java
+public class ShortDramaActivity extends AppCompatActivity {
+    private StarShortDramaPlayer videoView;
+    
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_short_drama);
+        
+        videoView = findViewById(R.id.player);
+        
+        // 无需手动设置播放内核，已默认使用 ExoPlayer
+        videoView.setUrl("https://example.com/video.m3u8");
+        videoView.addDefaultControlComponent("短剧标题", false);
         videoView.start();
     }
     
@@ -300,6 +363,10 @@ videoView.setSysTimeVisibility(View.GONE);         // 系统时间
 | `release()` | 释放资源 |
 | `onBackPressed()` | 处理返回键（返回true表示已处理） |
 
+### StarShortDramaPlayer 主要方法
+
+`StarShortDramaPlayer` 继承自 `StarVideoPlayer`，拥有父类所有方法，并默认使用 ExoPlayer 内核，隐藏了选集、上一集、下一集按钮。
+
 ### 监听器设置
 
 | 方法 | 说明 |
@@ -334,6 +401,100 @@ videoView.setSysTimeVisibility(View.GONE);         // 系统时间
 ## 依赖说明
 
 本库基于 [DKPlayer](https://github.com/Doikki/DKPlayer) 开发，感谢原作者的贡献。
+
+## 更新日志
+
+### v1.4.0 (2025-03-07)
+
+#### 新增功能
+- 新增 StarShortDramaPlayer 短剧专用播放器
+- 继承自 StarVideoPlayer
+- 新增： 双击暂停/播放 - 双击屏幕切换播放/暂停状态
+- 新增： 短剧播放器 - 提供精简版播放器 StarShortDramaPlayer ，隐藏选集/上下集按钮，默认使用 ExoPlayer 内核
+- 新增双击暂停/播放功能
+- 自动隐藏选集、上一集、下一集按钮
+- 默认使用 ExoPlayer 内核，无需手动设置
+---
+
+### v1.3.0 (2025-03-06)
+
+#### 新增功能
+- 竖屏全屏模式
+- 新增竖屏全屏按钮，点击自动进入竖屏全屏
+- 新增 setFullscreenPortraitButtonVisibility（） - 控制竖屏全屏按钮可见性
+- 新增 setOnFullscreenPortraitClickListener（） - 竖屏全点击监听
+- 按钮可见性控制
+- 支持批量控制底部按钮可见性
+- setVisibilityBottom（select， speed， previous， next） - 4参数版本
+- setVisibilityBottom（select， speed， previous， next， fullscreen， fullscreenPortrait） - 6参数版本
+- 支持单独控制底部各按钮可见性
+- setSelectButtonVisibility（） - 选集按钮
+- setSpeedButtonVisibility（） - 倍速按钮
+- setPreviousButtonVisibility（） - 上一集按钮
+- setNextButtonVisibility（） - 下一集按钮
+- setFullscreenButtonVisibility（） - 全屏按钮
+- setFullscreenPortraitButtonVisibility（） - 竖屏全屏按钮
+- 支持批量控制顶部按钮可见性
+- setTitleButtonsVisibility（back， pip， screen， settings）
+- 支持单独控制顶部各按钮可见性
+- setBackButtonVisibility（） - 返回按钮
+- setPipButtonVisibility（） - 小窗按钮
+- setScreenButtonVisibility（） - 投屏按钮
+- setSettingsButtonVisibility（） - 设置按钮
+- setSysTimeVisibility（） - 系统时间
+
+#### 优化改进
+- 修复全屏切换后按钮可见性状态丢失的问题
+- 按钮可见性状态现在会在竖屏/全屏布局切换时保持一致
+
+---
+
+### v1.2.0 (2025-03-05)
+
+### 新增功能
+- 选集功能支持自定义适配器
+- 设置面板新增播放内核选择（ExoPlayer / IJKPlayer）
+- 设置面板新增隐藏底部进度条开关
+- 设置面板新增自动旋转开关（根据视频宽高比自动切换横竖屏）
+- 全屏模式下播放按钮组居中显示在屏幕中央
+- 底部控制栏显示上一个按钮
+
+### 修复问题
+- 修复锁定按钮点击无效的问题
+- 修复全屏时顶部标题栏不显示的问题
+- 修复全屏切换内核时控制栏显示异常的问题
+- 修复加载指示器不显示的问题
+- 修复加载时播放按钮图标不变化的问题
+- 修复多处空指针风险（StarBottomView、StarTitleView、StarSettingsView、StarGestureView）
+- 修复选集列表数组越界风险
+- 修复进度条单位不一致导致显示不准确的问题
+
+### 优化改进
+- 优化全屏状态下的控制栏显示逻辑
+- 优化加载状态下的 UI 反馈
+- 优化代码健壮性，添加空指针检查
+
+---
+
+### v1.1.0 (2025-03-04)
+
+#### 新增功能
+- 需要引用dkplayer库
+- 修复打包时版本过高
+- 修复权限冲突
+
+---
+
+### v1.0.0 (2025-03-03)
+
+#### 首次发布
+- 基于 DKPlayer 封装的视频播放器
+- 支持 IJKPlayer 和 ExoPlayer 双内核
+- 支持倍速播放、长按倍速
+- 支持手势控制（亮度、音量、进度）
+- 支持全屏/小窗模式
+- 支持锁屏功能
+- 支持刘海屏适配
 
 ## License
 

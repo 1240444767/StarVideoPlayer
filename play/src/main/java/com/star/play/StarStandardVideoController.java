@@ -5,7 +5,6 @@ import android.content.pm.ActivityInfo;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -16,7 +15,6 @@ import androidx.annotation.Nullable;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
-import com.star.play.R;
 import com.star.play.controller.StarBottomView;
 import com.star.play.controller.StarCompleteView;
 import com.star.play.controller.StarErrorView;
@@ -161,6 +159,15 @@ public class StarStandardVideoController extends GestureVideoController implemen
         if (mOnSpeedListener != null) {
             mOnSpeedListener.onSpeed();
         }
+    }
+
+
+    @Override
+    public boolean onDoubleTap(MotionEvent e) {
+        if (mControlWrapper != null) {
+            mControlWrapper.togglePlay();
+        }
+        return false;
     }
 
     @Override

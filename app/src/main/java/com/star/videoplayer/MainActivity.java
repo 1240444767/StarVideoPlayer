@@ -1,13 +1,16 @@
 package com.star.videoplayer;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.color.DynamicColors;
+import com.star.play.StarShortDramaPlayer;
 import com.star.play.StarVideoPlayer;
 import com.star.play.controller.StarEpisodeView;
 
@@ -21,7 +24,7 @@ import xyz.doikki.videoplayer.ijk.IjkPlayerFactory;
 
 public class MainActivity extends AppCompatActivity {
     private StarVideoPlayer videoView;
-    private String URL="https://vv.jisuzyv.com/play/negox6je/index.m3u8";
+    private  String URL = "https://vv.jisuzyv.com/play/negox6je/index.m3u8";
     private ArrayList<HashMap<String, Object>> episodeItems = new ArrayList<>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,7 +100,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
+        MaterialButton button = findViewById(R.id.go);
+        button.setOnClickListener(view -> {
+            finish();
+            startActivity(new Intent(this,MainActivity2.class));
+        });
     }
 
 

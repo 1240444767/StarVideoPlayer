@@ -1,4 +1,5 @@
 # StarVideoPlayer
+[![](https://jitpack.io/v/1240444767/StarVideoPlayer.svg)](https://jitpack.io/#1240444767/StarVideoPlayer)
 
 一个功能强大的 Android 视频播放器库，专为短剧/视频应用设计，基于 DKPlayer 开发。
 

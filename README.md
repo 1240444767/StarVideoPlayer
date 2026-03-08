@@ -1,5 +1,6 @@
 # StarVideoPlayer
 [![](https://jitpack.io/v/1240444767/StarVideoPlayer.svg)](https://jitpack.io/#1240444767/StarVideoPlayer)
+![GitHub Repo stars](https://img.shields.io/github/stars/1240444767/StarVideoPlayer)
 
 一个功能强大的 Android 视频播放器库，专为短剧/视频应用设计，基于 DKPlayer 开发。
 
@@ -291,6 +292,8 @@ videoView.setOnFullscreenPortraitClickListener(view -> {
 
 ### 6. 按钮可见性控制
 
+#### 全局设置（同时影响全屏和非全屏）
+
 ```java
 // 隐藏底部按钮（4个参数：选集、倍速、上一集、下一集）
 videoView.setVisibilityBottom(View.GONE, View.GONE, View.GONE, View.GONE);
@@ -301,7 +304,7 @@ videoView.setVisibilityBottom(
     View.GONE, View.VISIBLE                       // 全屏、竖屏全屏
 );
 
-// 单独控制底部按钮
+// 单独控制底部按钮（全局）
 videoView.setSelectButtonVisibility(View.GONE);      // 选集按钮
 videoView.setSpeedButtonVisibility(View.GONE);       // 倍速按钮
 videoView.setPreviousButtonVisibility(View.GONE);    // 上一集按钮
@@ -318,6 +321,54 @@ videoView.setPipButtonVisibility(View.GONE);       // 小窗按钮
 videoView.setScreenButtonVisibility(View.GONE);    // 投屏按钮
 videoView.setSettingsButtonVisibility(View.GONE);  // 设置按钮
 videoView.setSysTimeVisibility(View.GONE);         // 系统时间
+```
+
+#### 区分全屏/非全屏设置
+
+```java
+// 设置非全屏状态下的底部按钮可见性（4个参数）
+videoView.setVisibilityBottomNormal(View.GONE, View.GONE, View.GONE, View.GONE);
+
+// 设置非全屏状态下的底部按钮可见性（6个参数）
+videoView.setVisibilityBottomNormal(
+    View.GONE, View.GONE, View.GONE, View.GONE,  // 选集、倍速、上一集、下一集
+    View.VISIBLE, View.GONE                       // 全屏、竖屏全屏
+);
+
+// 设置全屏状态下的底部按钮可见性（4个参数）
+videoView.setVisibilityBottomFullscreen(View.VISIBLE, View.VISIBLE, View.VISIBLE, View.VISIBLE);
+
+// 设置全屏状态下的底部按钮可见性（6个参数）
+videoView.setVisibilityBottomFullscreen(
+    View.VISIBLE, View.VISIBLE, View.VISIBLE, View.VISIBLE,  // 选集、倍速、上一集、下一集
+    View.GONE, View.GONE                                       // 全屏、竖屏全屏
+);
+
+// 一次性设置全屏和非全屏的按钮可见性（12个参数）
+videoView.setVisibilityBottomAll(
+    // 非全屏状态
+    View.GONE, View.GONE, View.GONE, View.GONE,  // 选集、倍速、上一集、下一集
+    View.VISIBLE, View.GONE,                      // 全屏、竖屏全屏
+    // 全屏状态
+    View.VISIBLE, View.VISIBLE, View.VISIBLE, View.VISIBLE,  // 选集、倍速、上一集、下一集
+    View.GONE, View.GONE                          // 全屏、竖屏全屏
+);
+
+// 单独控制各按钮在非全屏状态下的可见性
+videoView.setSelectButtonVisibilityNormal(View.GONE);
+videoView.setSpeedButtonVisibilityNormal(View.GONE);
+videoView.setPreviousButtonVisibilityNormal(View.GONE);
+videoView.setNextButtonVisibilityNormal(View.GONE);
+videoView.setFullscreenButtonVisibilityNormal(View.VISIBLE);
+videoView.setFullscreenPortraitButtonVisibilityNormal(View.GONE);
+
+// 单独控制各按钮在全屏状态下的可见性
+videoView.setSelectButtonVisibilityFullscreen(View.VISIBLE);
+videoView.setSpeedButtonVisibilityFullscreen(View.VISIBLE);
+videoView.setPreviousButtonVisibilityFullscreen(View.VISIBLE);
+videoView.setNextButtonVisibilityFullscreen(View.VISIBLE);
+videoView.setFullscreenButtonVisibilityFullscreen(View.GONE);
+videoView.setFullscreenPortraitButtonVisibilityFullscreen(View.GONE);
 ```
 
 ## API 说明
@@ -343,14 +394,31 @@ videoView.setSysTimeVisibility(View.GONE);         // 系统时间
 | `setAutoRotate(boolean autoRotate)` | 设置是否开启自动旋转 |
 | `setPlayerKernel(String kernel)` | 设置播放内核（"ExoPlayer" 或 "IJKPlayer"） |
 | `getPlayerKernel()` | 获取当前播放内核 |
-| `setVisibilityBottom(select, speed, previous, next)` | 设置底部按钮可见性（4参数） |
-| `setVisibilityBottom(select, speed, previous, next, fullscreen, fullscreenPortrait)` | 设置底部按钮可见性（6参数） |
-| `setSelectButtonVisibility(visibility)` | 设置选集按钮可见性 |
-| `setSpeedButtonVisibility(visibility)` | 设置倍速按钮可见性 |
-| `setPreviousButtonVisibility(visibility)` | 设置上一集按钮可见性 |
-| `setNextButtonVisibility(visibility)` | 设置下一集按钮可见性 |
-| `setFullscreenButtonVisibility(visibility)` | 设置全屏按钮可见性 |
-| `setFullscreenPortraitButtonVisibility(visibility)` | 设置竖屏全屏按钮可见性 |
+| `setVisibilityBottom(select, speed, previous, next)` | 设置底部按钮可见性（4参数，全局） |
+| `setVisibilityBottom(select, speed, previous, next, fullscreen, fullscreenPortrait)` | 设置底部按钮可见性（6参数，全局） |
+| `setVisibilityBottomNormal(select, speed, previous, next)` | 设置非全屏状态下底部按钮可见性（4参数） |
+| `setVisibilityBottomNormal(select, speed, previous, next, fullscreen, fullscreenPortrait)` | 设置非全屏状态下底部按钮可见性（6参数） |
+| `setVisibilityBottomFullscreen(select, speed, previous, next)` | 设置全屏状态下底部按钮可见性（4参数） |
+| `setVisibilityBottomFullscreen(select, speed, previous, next, fullscreen, fullscreenPortrait)` | 设置全屏状态下底部按钮可见性（6参数） |
+| `setVisibilityBottomAll(...)` | 一次性设置全屏和非全屏按钮可见性（12参数） |
+| `setSelectButtonVisibility(visibility)` | 设置选集按钮可见性（全局） |
+| `setSelectButtonVisibilityNormal(visibility)` | 设置非全屏状态下选集按钮可见性 |
+| `setSelectButtonVisibilityFullscreen(visibility)` | 设置全屏状态下选集按钮可见性 |
+| `setSpeedButtonVisibility(visibility)` | 设置倍速按钮可见性（全局） |
+| `setSpeedButtonVisibilityNormal(visibility)` | 设置非全屏状态下倍速按钮可见性 |
+| `setSpeedButtonVisibilityFullscreen(visibility)` | 设置全屏状态下倍速按钮可见性 |
+| `setPreviousButtonVisibility(visibility)` | 设置上一集按钮可见性（全局） |
+| `setPreviousButtonVisibilityNormal(visibility)` | 设置非全屏状态下上一集按钮可见性 |
+| `setPreviousButtonVisibilityFullscreen(visibility)` | 设置全屏状态下上一集按钮可见性 |
+| `setNextButtonVisibility(visibility)` | 设置下一集按钮可见性（全局） |
+| `setNextButtonVisibilityNormal(visibility)` | 设置非全屏状态下下一集按钮可见性 |
+| `setNextButtonVisibilityFullscreen(visibility)` | 设置全屏状态下下一集按钮可见性 |
+| `setFullscreenButtonVisibility(visibility)` | 设置全屏按钮可见性（全局） |
+| `setFullscreenButtonVisibilityNormal(visibility)` | 设置非全屏状态下全屏按钮可见性 |
+| `setFullscreenButtonVisibilityFullscreen(visibility)` | 设置全屏状态下全屏按钮可见性 |
+| `setFullscreenPortraitButtonVisibility(visibility)` | 设置竖屏全屏按钮可见性（全局） |
+| `setFullscreenPortraitButtonVisibilityNormal(visibility)` | 设置非全屏状态下竖屏全屏按钮可见性 |
+| `setFullscreenPortraitButtonVisibilityFullscreen(visibility)` | 设置全屏状态下竖屏全屏按钮可见性 |
 | `setTitleButtonsVisibility(back, pip, screen, settings)` | 设置顶部按钮可见性 |
 | `setBackButtonVisibility(visibility)` | 设置返回按钮可见性 |
 | `setPipButtonVisibility(visibility)` | 设置小窗按钮可见性 |
@@ -404,6 +472,18 @@ videoView.setSysTimeVisibility(View.GONE);         // 系统时间
 本库基于 [DKPlayer](https://github.com/Doikki/DKPlayer) 开发，感谢原作者的贡献。
 
 ## 更新日志
+
+### v1.7.0 (2025-03-09)
+
+#### 新增功能
+- ✨ 底部按钮可见性支持区分全屏/非全屏状态
+  - 新增 `setVisibilityBottomNormal()` 设置非全屏状态下的按钮可见性
+  - 新增 `setVisibilityBottomFullscreen()` 设置全屏状态下的按钮可见性
+  - 新增 `setVisibilityBottomAll()` 一次性设置全屏和非全屏的按钮可见性（12参数）
+  - 新增各按钮的 `setXxxButtonVisibilityNormal()` 和 `setXxxButtonVisibilityFullscreen()` 方法
+  - 原有的 `setVisibilityBottom()` 和 `setXxxButtonVisibility()` 方法仍保留，同时影响全屏和非全屏
+
+---
 
 ### v1.6.0 (2025-03-07)
 

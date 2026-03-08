@@ -49,12 +49,26 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
     private boolean mIsFullScreen = false;
     private float mCurrentSpeed = 1.0f;
 
-    private int mSelectVisibility = View.VISIBLE;
-    private int mSpeedVisibility = View.VISIBLE;
+    private int mSelectVisibility = View.GONE;
+    private int mSpeedVisibility = View.GONE;
     private int mPreviousVisibility = View.GONE;
     private int mNextVisibility = View.GONE;
     private int mFullscreenVisibility = View.VISIBLE;
     private int mFullscreenPortraitVisibility = View.GONE;
+
+    private int mSelectVisibilityNormal = View.GONE;
+    private int mSpeedVisibilityNormal = View.GONE;
+    private int mPreviousVisibilityNormal = View.GONE;
+    private int mNextVisibilityNormal = View.GONE;
+    private int mFullscreenVisibilityNormal = View.VISIBLE;
+    private int mFullscreenPortraitVisibilityNormal = View.GONE;
+
+    private int mSelectVisibilityFullscreen = View.GONE;
+    private int mSpeedVisibilityFullscreen = View.GONE;
+    private int mPreviousVisibilityFullscreen = View.GONE;
+    private int mNextVisibilityFullscreen = View.GONE;
+    private int mFullscreenVisibilityFullscreen = View.VISIBLE;
+    private int mFullscreenPortraitVisibilityFullscreen = View.GONE;
 
     private OnSelectClickListener mOnSelectClickListener;
     private OnSpeedClickListener mOnSpeedClickListener;
@@ -148,23 +162,30 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
     }
 
     private void applyButtonVisibility() {
+        int selectVisibility = mIsFullScreen ? mSelectVisibilityFullscreen : mSelectVisibilityNormal;
+        int speedVisibility = mIsFullScreen ? mSpeedVisibilityFullscreen : mSpeedVisibilityNormal;
+        int previousVisibility = mIsFullScreen ? mPreviousVisibilityFullscreen : mPreviousVisibilityNormal;
+        int nextVisibility = mIsFullScreen ? mNextVisibilityFullscreen : mNextVisibilityNormal;
+        int fullscreenVisibility = mIsFullScreen ? mFullscreenVisibilityFullscreen : mFullscreenVisibilityNormal;
+        int fullscreenPortraitVisibility = mIsFullScreen ? mFullscreenPortraitVisibilityFullscreen : mFullscreenPortraitVisibilityNormal;
+
         if (mSelectedWritingsView != null) {
-            mSelectedWritingsView.setVisibility(mSelectVisibility);
+            mSelectedWritingsView.setVisibility(selectVisibility);
         }
         if (mSpeedView != null) {
-            mSpeedView.setVisibility(mSpeedVisibility);
+            mSpeedView.setVisibility(speedVisibility);
         }
         if (mSkipPreviousView != null) {
-            mSkipPreviousView.setVisibility(mPreviousVisibility);
+            mSkipPreviousView.setVisibility(previousVisibility);
         }
         if (mSkipNextView != null) {
-            mSkipNextView.setVisibility(mNextVisibility);
+            mSkipNextView.setVisibility(nextVisibility);
         }
         if (mFullscreenView != null) {
-            mFullscreenView.setVisibility(mFullscreenVisibility);
+            mFullscreenView.setVisibility(fullscreenVisibility);
         }
         if (mFullscreenPortraitView != null) {
-            mFullscreenPortraitView.setVisibility(mFullscreenPortraitVisibility);
+            mFullscreenPortraitView.setVisibility(fullscreenPortraitVisibility);
         }
     }
 
@@ -371,35 +392,127 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
 
     public void setBottomButtonsVisibility(int selectVisibility, int speedVisibility, 
                                            int previousVisibility, int nextVisibility) {
-        mSelectVisibility = selectVisibility;
-        mSpeedVisibility = speedVisibility;
-        mPreviousVisibility = previousVisibility;
-        mNextVisibility = nextVisibility;
+        setBottomButtonsVisibilityNormal(selectVisibility, speedVisibility, previousVisibility, nextVisibility);
+        setBottomButtonsVisibilityFullscreen(selectVisibility, speedVisibility, previousVisibility, nextVisibility);
         applyButtonVisibility();
     }
 
     public void setBottomButtonsVisibility(int selectVisibility, int speedVisibility, 
                                            int previousVisibility, int nextVisibility,
                                            int fullscreenVisibility, int fullscreenPortraitVisibility) {
-        mSelectVisibility = selectVisibility;
-        mSpeedVisibility = speedVisibility;
-        mPreviousVisibility = previousVisibility;
-        mNextVisibility = nextVisibility;
-        mFullscreenVisibility = fullscreenVisibility;
-        mFullscreenPortraitVisibility = fullscreenPortraitVisibility;
+        setBottomButtonsVisibilityNormal(selectVisibility, speedVisibility, previousVisibility, 
+                nextVisibility, fullscreenVisibility, fullscreenPortraitVisibility);
+        setBottomButtonsVisibilityFullscreen(selectVisibility, speedVisibility, previousVisibility, 
+                nextVisibility, fullscreenVisibility, fullscreenPortraitVisibility);
+        applyButtonVisibility();
+    }
+
+    public void setBottomButtonsVisibilityNormal(int selectVisibility, int speedVisibility, 
+                                                 int previousVisibility, int nextVisibility) {
+        mSelectVisibilityNormal = selectVisibility;
+        mSpeedVisibilityNormal = speedVisibility;
+        mPreviousVisibilityNormal = previousVisibility;
+        mNextVisibilityNormal = nextVisibility;
+        if (!mIsFullScreen) {
+            applyButtonVisibility();
+        }
+    }
+
+    public void setBottomButtonsVisibilityNormal(int selectVisibility, int speedVisibility, 
+                                                 int previousVisibility, int nextVisibility,
+                                                 int fullscreenVisibility, int fullscreenPortraitVisibility) {
+        mSelectVisibilityNormal = selectVisibility;
+        mSpeedVisibilityNormal = speedVisibility;
+        mPreviousVisibilityNormal = previousVisibility;
+        mNextVisibilityNormal = nextVisibility;
+        mFullscreenVisibilityNormal = fullscreenVisibility;
+        mFullscreenPortraitVisibilityNormal = fullscreenPortraitVisibility;
+        if (!mIsFullScreen) {
+            applyButtonVisibility();
+        }
+    }
+
+    public void setBottomButtonsVisibilityFullscreen(int selectVisibility, int speedVisibility, 
+                                                     int previousVisibility, int nextVisibility) {
+        mSelectVisibilityFullscreen = selectVisibility;
+        mSpeedVisibilityFullscreen = speedVisibility;
+        mPreviousVisibilityFullscreen = previousVisibility;
+        mNextVisibilityFullscreen = nextVisibility;
+        if (mIsFullScreen) {
+            applyButtonVisibility();
+        }
+    }
+
+    public void setBottomButtonsVisibilityFullscreen(int selectVisibility, int speedVisibility, 
+                                                     int previousVisibility, int nextVisibility,
+                                                     int fullscreenVisibility, int fullscreenPortraitVisibility) {
+        mSelectVisibilityFullscreen = selectVisibility;
+        mSpeedVisibilityFullscreen = speedVisibility;
+        mPreviousVisibilityFullscreen = previousVisibility;
+        mNextVisibilityFullscreen = nextVisibility;
+        mFullscreenVisibilityFullscreen = fullscreenVisibility;
+        mFullscreenPortraitVisibilityFullscreen = fullscreenPortraitVisibility;
+        if (mIsFullScreen) {
+            applyButtonVisibility();
+        }
+    }
+
+    public void setBottomButtonsVisibilityAll(int selectNormal, int speedNormal, int previousNormal, int nextNormal,
+                                              int fullscreenNormal, int fullscreenPortraitNormal,
+                                              int selectFullscreen, int speedFullscreen, int previousFullscreen, int nextFullscreen,
+                                              int fullscreenFullscreen, int fullscreenPortraitFullscreen) {
+        mSelectVisibilityNormal = selectNormal;
+        mSpeedVisibilityNormal = speedNormal;
+        mPreviousVisibilityNormal = previousNormal;
+        mNextVisibilityNormal = nextNormal;
+        mFullscreenVisibilityNormal = fullscreenNormal;
+        mFullscreenPortraitVisibilityNormal = fullscreenPortraitNormal;
+
+        mSelectVisibilityFullscreen = selectFullscreen;
+        mSpeedVisibilityFullscreen = speedFullscreen;
+        mPreviousVisibilityFullscreen = previousFullscreen;
+        mNextVisibilityFullscreen = nextFullscreen;
+        mFullscreenVisibilityFullscreen = fullscreenFullscreen;
+        mFullscreenPortraitVisibilityFullscreen = fullscreenPortraitFullscreen;
         applyButtonVisibility();
     }
 
     public void setSelectButtonVisibility(int visibility) {
-        mSelectVisibility = visibility;
-        if (mSelectedWritingsView != null) {
+        setSelectButtonVisibilityNormal(visibility);
+        setSelectButtonVisibilityFullscreen(visibility);
+        applyButtonVisibility();
+    }
+
+    public void setSelectButtonVisibilityNormal(int visibility) {
+        mSelectVisibilityNormal = visibility;
+        if (!mIsFullScreen && mSelectedWritingsView != null) {
+            mSelectedWritingsView.setVisibility(visibility);
+        }
+    }
+
+    public void setSelectButtonVisibilityFullscreen(int visibility) {
+        mSelectVisibilityFullscreen = visibility;
+        if (mIsFullScreen && mSelectedWritingsView != null) {
             mSelectedWritingsView.setVisibility(visibility);
         }
     }
 
     public void setSpeedButtonVisibility(int visibility) {
-        mSpeedVisibility = visibility;
-        if (mSpeedView != null) {
+        setSpeedButtonVisibilityNormal(visibility);
+        setSpeedButtonVisibilityFullscreen(visibility);
+        applyButtonVisibility();
+    }
+
+    public void setSpeedButtonVisibilityNormal(int visibility) {
+        mSpeedVisibilityNormal = visibility;
+        if (!mIsFullScreen && mSpeedView != null) {
+            mSpeedView.setVisibility(visibility);
+        }
+    }
+
+    public void setSpeedButtonVisibilityFullscreen(int visibility) {
+        mSpeedVisibilityFullscreen = visibility;
+        if (mIsFullScreen && mSpeedView != null) {
             mSpeedView.setVisibility(visibility);
         }
     }
@@ -415,29 +528,81 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
     }
 
     public void setPreviousButtonVisibility(int visibility) {
-        mPreviousVisibility = visibility;
-        if (mSkipPreviousView != null) {
+        setPreviousButtonVisibilityNormal(visibility);
+        setPreviousButtonVisibilityFullscreen(visibility);
+        applyButtonVisibility();
+    }
+
+    public void setPreviousButtonVisibilityNormal(int visibility) {
+        mPreviousVisibilityNormal = visibility;
+        if (!mIsFullScreen && mSkipPreviousView != null) {
+            mSkipPreviousView.setVisibility(visibility);
+        }
+    }
+
+    public void setPreviousButtonVisibilityFullscreen(int visibility) {
+        mPreviousVisibilityFullscreen = visibility;
+        if (mIsFullScreen && mSkipPreviousView != null) {
             mSkipPreviousView.setVisibility(visibility);
         }
     }
 
     public void setNextButtonVisibility(int visibility) {
-        mNextVisibility = visibility;
-        if (mSkipNextView != null) {
+        setNextButtonVisibilityNormal(visibility);
+        setNextButtonVisibilityFullscreen(visibility);
+        applyButtonVisibility();
+    }
+
+    public void setNextButtonVisibilityNormal(int visibility) {
+        mNextVisibilityNormal = visibility;
+        if (!mIsFullScreen && mSkipNextView != null) {
+            mSkipNextView.setVisibility(visibility);
+        }
+    }
+
+    public void setNextButtonVisibilityFullscreen(int visibility) {
+        mNextVisibilityFullscreen = visibility;
+        if (mIsFullScreen && mSkipNextView != null) {
             mSkipNextView.setVisibility(visibility);
         }
     }
 
     public void setFullscreenButtonVisibility(int visibility) {
-        mFullscreenVisibility = visibility;
-        if (mFullscreenView != null) {
+        setFullscreenButtonVisibilityNormal(visibility);
+        setFullscreenButtonVisibilityFullscreen(visibility);
+        applyButtonVisibility();
+    }
+
+    public void setFullscreenButtonVisibilityNormal(int visibility) {
+        mFullscreenVisibilityNormal = visibility;
+        if (!mIsFullScreen && mFullscreenView != null) {
+            mFullscreenView.setVisibility(visibility);
+        }
+    }
+
+    public void setFullscreenButtonVisibilityFullscreen(int visibility) {
+        mFullscreenVisibilityFullscreen = visibility;
+        if (mIsFullScreen && mFullscreenView != null) {
             mFullscreenView.setVisibility(visibility);
         }
     }
 
     public void setFullscreenPortraitButtonVisibility(int visibility) {
-        mFullscreenPortraitVisibility = visibility;
-        if (mFullscreenPortraitView != null) {
+        setFullscreenPortraitButtonVisibilityNormal(visibility);
+        setFullscreenPortraitButtonVisibilityFullscreen(visibility);
+        applyButtonVisibility();
+    }
+
+    public void setFullscreenPortraitButtonVisibilityNormal(int visibility) {
+        mFullscreenPortraitVisibilityNormal = visibility;
+        if (!mIsFullScreen && mFullscreenPortraitView != null) {
+            mFullscreenPortraitView.setVisibility(visibility);
+        }
+    }
+
+    public void setFullscreenPortraitButtonVisibilityFullscreen(int visibility) {
+        mFullscreenPortraitVisibilityFullscreen = visibility;
+        if (mIsFullScreen && mFullscreenPortraitView != null) {
             mFullscreenPortraitView.setVisibility(visibility);
         }
     }

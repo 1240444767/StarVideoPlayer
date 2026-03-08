@@ -57,10 +57,18 @@ public class MainActivity extends AppCompatActivity {
             videoView.setUrl(URL);
             videoView.start();
         });
-        videoView.setVisibilityBottom(View.GONE, View.GONE, View.GONE, View.GONE);
+        // 非全屏时隐藏选集、倍速按钮，显示全屏按钮
+        videoView.setVisibilityBottomNormal(
+                View.GONE, View.GONE, View.GONE, View.GONE,  // 选集、倍速、上一集、下一集
+                View.VISIBLE, View.GONE                       // 全屏、竖屏全屏
+        );
+
+// 全屏时显示选集、倍速按钮，隐藏全屏按钮
+        videoView.setVisibilityBottomFullscreen(
+                View.VISIBLE, View.VISIBLE, View.VISIBLE, View.VISIBLE,
+                View.VISIBLE, View.VISIBLE
+        );
         videoView.setTitleButtonsVisibility(View.GONE, View.GONE, View.GONE, View.GONE);
-        // 显示竖屏全屏按钮
-        videoView.setFullscreenPortraitButtonVisibility(View.VISIBLE);
         videoView.start(); //开始播放，不调用则不自动播放
         videoView.setOnUpSetClickListener(new StarVideoPlayer.OnUpSetClickListener() {
             @Override

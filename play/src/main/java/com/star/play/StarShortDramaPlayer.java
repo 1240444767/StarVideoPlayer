@@ -28,5 +28,6 @@ public class StarShortDramaPlayer extends StarVideoPlayer {
         setSelectButtonVisibility(GONE);
         setPreviousButtonVisibility(GONE);
         setNextButtonVisibility(GONE);
+        setSpeedButtonVisibility(VISIBLE);
     }
 }

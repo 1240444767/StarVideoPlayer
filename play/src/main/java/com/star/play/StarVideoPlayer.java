@@ -618,28 +618,114 @@ public class StarVideoPlayer extends VideoView {
                                                fullscreenVisibility, fullscreenPortraitVisibility);
     }
 
+    public void setVisibilityBottomNormal(int selectVisibility, int speedVisibility, 
+                                          int previousVisibility, int nextVisibility) {
+        mBottomView.setBottomButtonsVisibilityNormal(selectVisibility, speedVisibility, 
+                                                     previousVisibility, nextVisibility);
+    }
+
+    public void setVisibilityBottomNormal(int selectVisibility, int speedVisibility, 
+                                          int previousVisibility, int nextVisibility,
+                                          int fullscreenVisibility, int fullscreenPortraitVisibility) {
+        mBottomView.setBottomButtonsVisibilityNormal(selectVisibility, speedVisibility, 
+                                                     previousVisibility, nextVisibility,
+                                                     fullscreenVisibility, fullscreenPortraitVisibility);
+    }
+
+    public void setVisibilityBottomFullscreen(int selectVisibility, int speedVisibility, 
+                                              int previousVisibility, int nextVisibility) {
+        mBottomView.setBottomButtonsVisibilityFullscreen(selectVisibility, speedVisibility, 
+                                                         previousVisibility, nextVisibility);
+    }
+
+    public void setVisibilityBottomFullscreen(int selectVisibility, int speedVisibility, 
+                                              int previousVisibility, int nextVisibility,
+                                              int fullscreenVisibility, int fullscreenPortraitVisibility) {
+        mBottomView.setBottomButtonsVisibilityFullscreen(selectVisibility, speedVisibility, 
+                                                         previousVisibility, nextVisibility,
+                                                         fullscreenVisibility, fullscreenPortraitVisibility);
+    }
+
+    public void setVisibilityBottomAll(int selectNormal, int speedNormal, int previousNormal, int nextNormal,
+                                       int fullscreenNormal, int fullscreenPortraitNormal,
+                                       int selectFullscreen, int speedFullscreen, int previousFullscreen, int nextFullscreen,
+                                       int fullscreenFullscreen, int fullscreenPortraitFullscreen) {
+        mBottomView.setBottomButtonsVisibilityAll(selectNormal, speedNormal, previousNormal, nextNormal,
+                                                  fullscreenNormal, fullscreenPortraitNormal,
+                                                  selectFullscreen, speedFullscreen, previousFullscreen, nextFullscreen,
+                                                  fullscreenFullscreen, fullscreenPortraitFullscreen);
+    }
+
     public void setSelectButtonVisibility(int visibility) {
         mBottomView.setSelectButtonVisibility(visibility);
+    }
+
+    public void setSelectButtonVisibilityNormal(int visibility) {
+        mBottomView.setSelectButtonVisibilityNormal(visibility);
+    }
+
+    public void setSelectButtonVisibilityFullscreen(int visibility) {
+        mBottomView.setSelectButtonVisibilityFullscreen(visibility);
     }
 
     public void setSpeedButtonVisibility(int visibility) {
         mBottomView.setSpeedButtonVisibility(visibility);
     }
 
+    public void setSpeedButtonVisibilityNormal(int visibility) {
+        mBottomView.setSpeedButtonVisibilityNormal(visibility);
+    }
+
+    public void setSpeedButtonVisibilityFullscreen(int visibility) {
+        mBottomView.setSpeedButtonVisibilityFullscreen(visibility);
+    }
+
     public void setPreviousButtonVisibility(int visibility) {
         mBottomView.setPreviousButtonVisibility(visibility);
+    }
+
+    public void setPreviousButtonVisibilityNormal(int visibility) {
+        mBottomView.setPreviousButtonVisibilityNormal(visibility);
+    }
+
+    public void setPreviousButtonVisibilityFullscreen(int visibility) {
+        mBottomView.setPreviousButtonVisibilityFullscreen(visibility);
     }
 
     public void setNextButtonVisibility(int visibility) {
         mBottomView.setNextButtonVisibility(visibility);
     }
 
+    public void setNextButtonVisibilityNormal(int visibility) {
+        mBottomView.setNextButtonVisibilityNormal(visibility);
+    }
+
+    public void setNextButtonVisibilityFullscreen(int visibility) {
+        mBottomView.setNextButtonVisibilityFullscreen(visibility);
+    }
+
     public void setFullscreenButtonVisibility(int visibility) {
         mBottomView.setFullscreenButtonVisibility(visibility);
     }
 
+    public void setFullscreenButtonVisibilityNormal(int visibility) {
+        mBottomView.setFullscreenButtonVisibilityNormal(visibility);
+    }
+
+    public void setFullscreenButtonVisibilityFullscreen(int visibility) {
+        mBottomView.setFullscreenButtonVisibilityFullscreen(visibility);
+    }
+
     public void setFullscreenPortraitButtonVisibility(int visibility) {
         mBottomView.setFullscreenPortraitButtonVisibility(visibility);
+    }
+
+    public void setFullscreenPortraitButtonVisibilityNormal(int visibility) {
+        mBottomView.setFullscreenPortraitButtonVisibilityNormal(visibility);
+    }
+
+    public void setFullscreenPortraitButtonVisibilityFullscreen(int visibility) {
+        mBottomView.setFullscreenPortraitButtonVisibilityFullscreen(visibility);
     }
 
     public void setOnFullscreenPortraitClickListener(StarBottomView.OnFullscreenPortraitClickListener listener) {

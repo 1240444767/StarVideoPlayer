@@ -19,4 +19,11 @@
         android:layout_height="wrap_content"
         android:text="跳转短剧"/>
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/go1"
+        android:layout_gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="跳转自定义集数布局"/>
+
 </LinearLayout>

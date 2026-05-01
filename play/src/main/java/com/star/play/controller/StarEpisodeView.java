@@ -19,9 +19,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.button.MaterialButton;
 import com.star.play.R;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import xyz.doikki.videoplayer.controller.ControlWrapper;
 import xyz.doikki.videoplayer.controller.IControlComponent;
 import xyz.doikki.videoplayer.player.VideoView;
@@ -32,13 +29,16 @@ public class StarEpisodeView extends FrameLayout implements IControlComponent {
 
     private LinearLayout mPanelView;
     private View mDimView;
+    private FrameLayout mContentContainer;
     private RecyclerView mRecyclerView;
     private MaterialButton mCloseButton;
+    private TextView mTitleView;
 
     private RecyclerView.Adapter<?> mAdapter;
-    private EpisodeAdapter mDefaultAdapter;
+    private StarDefaultEpisodeAdapter mDefaultAdapter;
     private boolean mIsShowing = false;
     private boolean mUseCustomAdapter = false;
+    private boolean mUseCustomContent = false;
 
     public interface OnEpisodeSelectListener {
         void onEpisodeSelect(int index, String title);
@@ -66,13 +66,21 @@ public class StarEpisodeView extends FrameLayout implements IControlComponent {
         setVisibility(GONE);
         LayoutInflater.from(getContext()).inflate(R.layout.star_episode_view, this, true);
 
-        mDimView      = findViewById(R.id.dim);
-        mPanelView    = findViewById(R.id.panel);
-        mRecyclerView = findViewById(R.id.recycler_view);
-        mCloseButton  = findViewById(R.id.btn_close);
+        mDimView           = findViewById(R.id.dim);
+        mPanelView         = findViewById(R.id.panel);
+        mContentContainer  = findViewById(R.id.content_container);
+        mRecyclerView      = findViewById(R.id.recycler_view);
+        mCloseButton       = findViewById(R.id.btn_close);
+        mTitleView         = findViewById(R.id.tv_title);
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        mDefaultAdapter = new EpisodeAdapter();
+        mDefaultAdapter = new StarDefaultEpisodeAdapter();
+        mDefaultAdapter.setOnEpisodeSelectListener((index, title) -> {
+            if (mOnEpisodeSelectListener != null) {
+                mOnEpisodeSelectListener.onEpisodeSelect(index, title);
+            }
+            hide();
+        });
         mAdapter = mDefaultAdapter;
         mRecyclerView.setAdapter(mAdapter);
 
@@ -81,7 +89,7 @@ public class StarEpisodeView extends FrameLayout implements IControlComponent {
         mPanelView.setOnClickListener(v -> { });
     }
 
-    public void setEpisodes(List<String> episodes, int currentIndex) {
+    public void setEpisodes(java.util.List<String> episodes, int currentIndex) {
         if (mUseCustomAdapter) return;
         mDefaultAdapter.setData(episodes, currentIndex);
     }
@@ -104,6 +112,82 @@ public class StarEpisodeView extends FrameLayout implements IControlComponent {
 
     public RecyclerView getRecyclerView() {
         return mRecyclerView;
+    }
+
+    /**
+     * 设置面板标题
+     */
+    public void setPanelTitle(String title) {
+        if (mTitleView != null) {
+            mTitleView.setText(title);
+        }
+    }
+
+    /**
+     * 设置面板标题文字颜色
+     */
+    public void setPanelTitleColor(int color) {
+        if (mTitleView != null) {
+            mTitleView.setTextColor(color);
+        }
+    }
+
+    /**
+     * 设置标题栏可见性
+     */
+    public void setTitleBarVisibility(int visibility) {
+        View titleBar = mTitleView != null ? (View) mTitleView.getParent() : null;
+        if (titleBar != null) {
+            titleBar.setVisibility(visibility);
+        }
+    }
+
+    /**
+     * 设置关闭按钮可见性
+     */
+    public void setCloseButtonVisibility(int visibility) {
+        if (mCloseButton != null) {
+            mCloseButton.setVisibility(visibility);
+        }
+    }
+
+    /**
+     * 替换内容区域为自定义 View
+     * 调用后默认的 RecyclerView 会被移除
+     */
+    public void setCustomContentView(View view) {
+        if (mContentContainer == null || view == null) return;
+        mUseCustomContent = true;
+        mContentContainer.removeAllViews();
+        mContentContainer.addView(view);
+    }
+
+    /**
+     * 通过布局资源 ID 替换内容区域
+     */
+    public void setCustomContentView(int layoutResId) {
+        if (mContentContainer == null) return;
+        mUseCustomContent = true;
+        mContentContainer.removeAllViews();
+        View view = LayoutInflater.from(getContext()).inflate(layoutResId, mContentContainer, false);
+        mContentContainer.addView(view);
+    }
+
+    /**
+     * 恢复默认的 RecyclerView 内容
+     */
+    public void restoreDefaultContent() {
+        if (mContentContainer == null) return;
+        mUseCustomContent = false;
+        mContentContainer.removeAllViews();
+        mContentContainer.addView(mRecyclerView);
+    }
+
+    /**
+     * 获取内容容器，可用于动态添加子 View
+     */
+    public FrameLayout getContentContainer() {
+        return mContentContainer;
     }
 
     public void show() {
@@ -182,61 +266,5 @@ public class StarEpisodeView extends FrameLayout implements IControlComponent {
     @Override
     public void onLockStateChanged(boolean isLocked) {
         if (isLocked && mIsShowing) hide();
-    }
-
-    private class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.VH> {
-
-        private final List<String> mData = new ArrayList<>();
-        private int mCurrentIndex = -1;
-
-        void setData(List<String> data, int currentIndex) {
-            mData.clear();
-            if (data != null) {
-                mData.addAll(data);
-            }
-            mCurrentIndex = currentIndex;
-            notifyDataSetChanged();
-        }
-
-        void setCurrentIndex(int index) {
-            int old = mCurrentIndex;
-            mCurrentIndex = index;
-            if (old >= 0 && old < mData.size())    notifyItemChanged(old);
-            if (index >= 0 && index < mData.size()) notifyItemChanged(index);
-        }
-
-        @NonNull
-        @Override
-        public VH onCreateViewHolder(@NonNull android.view.ViewGroup parent, int viewType) {
-            View v = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.item_episode, parent, false);
-            return new VH(v);
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull VH holder, int position) {
-            if (position < 0 || position >= mData.size()) return;
-            holder.titleView.setText(mData.get(position));
-            holder.titleView.setSelected(position == mCurrentIndex);
-            holder.itemView.setOnClickListener(v -> {
-                int pos = holder.getBindingAdapterPosition();
-                if (pos == RecyclerView.NO_POSITION || pos < 0 || pos >= mData.size()) return;
-                setCurrentIndex(pos);
-                if (mOnEpisodeSelectListener != null)
-                    mOnEpisodeSelectListener.onEpisodeSelect(pos, mData.get(pos));
-                hide();
-            });
-        }
-
-        @Override
-        public int getItemCount() { return mData.size(); }
-
-        class VH extends RecyclerView.ViewHolder {
-            TextView titleView;
-            VH(@NonNull View v) {
-                super(v);
-                titleView = v.findViewById(R.id.episode_title);
-            }
-        }
     }
 }

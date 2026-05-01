@@ -1,5 +1,6 @@
 package com.star.videoplayer;
 
+import android.graphics.Color;
 import android.net.Uri;
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -73,6 +74,9 @@ public class MainActivity extends AppCompatActivity {
             map.put("name", "第" + i + "集");
             episodeItems.add(map);
         }
+        videoView.setTimeTextColor(Color.WHITE);
+        videoView.setTitleTextColor(Color.WHITE);
+        videoView.setSysTimeTextColor(Color.WHITE);
         videoView.setEpisodeAdapter(new EpisodeAdapter(episodeItems));
 
         // 设置标题
@@ -123,6 +127,11 @@ public class MainActivity extends AppCompatActivity {
         button.setOnClickListener(view -> {
             finish();
             startActivity(new Intent(this,MainActivity2.class));
+        });
+        MaterialButton button1 = findViewById(R.id.go1);
+        button1.setOnClickListener(view -> {
+            finish();
+            startActivity(new Intent(this,MainActivity3.class));
         });
     }
 

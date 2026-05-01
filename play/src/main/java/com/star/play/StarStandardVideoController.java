@@ -17,6 +17,7 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.star.play.controller.StarBottomView;
 import com.star.play.controller.StarCompleteView;
+import com.star.play.controller.StarCutoutHelper;
 import com.star.play.controller.StarErrorView;
 import com.star.play.controller.StarGestureView;
 import com.star.play.controller.StarLiveControlView;
@@ -218,19 +219,9 @@ public class StarStandardVideoController extends GestureVideoController implemen
                 break;
         }
 
-        if (mActivity != null && hasCutout()) {
-            int orientation = mActivity.getRequestedOrientation();
+        if (mActivity != null) {
             int dp24 = PlayerUtils.dp2px(getContext(), 24);
-            int cutoutHeight = getCutoutHeight();
-            LayoutParams lp = (LayoutParams) mLockButton.getLayoutParams();
-            if (orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
-                lp.setMargins(dp24, 0, dp24, 0);
-            } else if (orientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
-                lp.setMargins(dp24 + cutoutHeight, 0, dp24, 0);
-            } else if (orientation == ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE) {
-                lp.setMargins(dp24, 0, dp24 + cutoutHeight, 0);
-            }
-            mLockButton.setLayoutParams(lp);
+            StarCutoutHelper.applyCutoutMargin(mLockButton, mControlWrapper, mActivity, dp24, dp24);
         }
     }
 

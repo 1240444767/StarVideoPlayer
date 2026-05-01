@@ -124,23 +124,9 @@ public class StarCompleteView extends FrameLayout implements IControlComponent {
             mStopFullscreenView.setVisibility(GONE);
         }
 
-        // 刘海屏适配：根据屏幕方向和刘海高度调整退出按钮的左边距
+        // 刘海屏适配
         Activity activity = PlayerUtils.scanForActivity(getContext());
-        if (activity != null && mControlWrapper != null && mControlWrapper.hasCutout()) {
-            int orientation = activity.getRequestedOrientation();
-            int cutoutHeight = mControlWrapper.getCutoutHeight();
-            LayoutParams params = (LayoutParams) mStopFullscreenView.getLayoutParams();
-            if (orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
-                params.setMargins(0, 0, 0, 0);
-            } else if (orientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
-                // 左横屏时，左边距增加刘海高度
-                params.setMargins(cutoutHeight, 0, 0, 0);
-            } else if (orientation == ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE) {
-                // 右横屏时，右边距增加刘海高度（但本控件是左边距，这里保持原样或可根据需求调整）
-                params.setMargins(0, 0, 0, 0);
-            }
-            mStopFullscreenView.setLayoutParams(params);
-        }
+        StarCutoutHelper.applyCutoutMargin(mStopFullscreenView, mControlWrapper, activity);
     }
 
     @Override

@@ -18,6 +18,7 @@
             android:id="@+id/back"
             style="?attr/materialIconButtonStyle"
             app:iconTint="?attr/colorPrimary"
+            app:iconSize="24dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:icon="@drawable/arrow_back"/>
@@ -40,6 +41,7 @@
             style="?attr/materialIconButtonStyle"
             app:iconTint="?attr/colorPrimary"
             android:id="@+id/pip"
+            app:iconSize="24dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:icon="@drawable/picture_in_picture"/>
@@ -47,6 +49,7 @@
             style="?attr/materialIconButtonStyle"
             app:iconTint="?attr/colorPrimary"
             android:id="@+id/screen"
+            app:iconSize="24dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:icon="@drawable/airplay"/>
@@ -54,6 +57,7 @@
             style="?attr/materialIconButtonStyle"
             app:iconTint="?attr/colorPrimary"
             android:id="@+id/settings"
+            app:iconSize="24dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:icon="@drawable/settings"/>

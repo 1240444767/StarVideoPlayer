@@ -31,6 +31,7 @@ public class MainActivity2 extends AppCompatActivity {
         DynamicColors.applyToActivityIfAvailable(this);
         setContentView(R.layout.activity_main2);
         videoView = findViewById(R.id.video_player);
+        videoView.setPlayerFactory(ExoMediaPlayerFactory.create());
         videoView.setUrl(URL);
         videoView.addDefaultControlComponent("短剧", false);
         videoView.start();

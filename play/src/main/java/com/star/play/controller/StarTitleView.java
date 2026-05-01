@@ -281,17 +281,8 @@ public class StarTitleView extends FrameLayout implements IControlComponent {
         }
 
         Activity activity = PlayerUtils.scanForActivity(getContext());
-        if (activity != null && mControlWrapper.hasCutout() && mTitleContainer != null) {
-            int orientation = activity.getRequestedOrientation();
-            int cutoutHeight = mControlWrapper.getCutoutHeight();
-
-            if (orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
-                mTitleContainer.setPadding(0, 0, 0, 0);
-            } else if (orientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
-                mTitleContainer.setPadding(cutoutHeight, 0, 0, 0);
-            } else if (orientation == ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE) {
-                mTitleContainer.setPadding(0, 0, cutoutHeight, 0);
-            }
+        if (mTitleContainer != null) {
+            StarCutoutHelper.applyCutoutPadding(mTitleContainer, mControlWrapper, activity);
         }
     }
 

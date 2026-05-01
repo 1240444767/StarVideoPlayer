@@ -137,19 +137,9 @@ public class StarLiveControlView extends FrameLayout implements IControlComponen
                 break;
         }
 
-        // 刘海屏适配：根据屏幕方向和刘海高度调整底部容器的左右边距
+        // 刘海屏适配
         Activity activity = PlayerUtils.scanForActivity(getContext());
-        if (activity != null && mControlWrapper != null && mControlWrapper.hasCutout()) {
-            int orientation = activity.getRequestedOrientation();
-            int cutoutHeight = mControlWrapper.getCutoutHeight();
-            if (orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
-                mBottomContainer.setPadding(0, 0, 0, 0);
-            } else if (orientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
-                mBottomContainer.setPadding(cutoutHeight, 0, 0, 0);
-            } else if (orientation == ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE) {
-                mBottomContainer.setPadding(0, 0, cutoutHeight, 0);
-            }
-        }
+        StarCutoutHelper.applyCutoutPadding(mBottomContainer, mControlWrapper, activity);
     }
 
     @Override

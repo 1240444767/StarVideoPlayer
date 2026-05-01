@@ -215,12 +215,9 @@ public class StarSettingsView extends FrameLayout implements IControlComponent {
         mChipGroupScale.setOnCheckedStateChangeListener((group, checkedIds) -> {
             if (checkedIds.isEmpty()) return;
             int id = checkedIds.get(0);
-            Chip chip = findViewById(id);
-            if (chip == null) return;
-            String text = chip.getText().toString();
-            int scaleType = mapScaleTextToType(text);
+            int scaleType = mapChipIdToScaleType(id);
             if (mOnScaleChangeListener != null) {
-                mOnScaleChangeListener.onScaleChanged(scaleType, text);
+                mOnScaleChangeListener.onScaleChanged(scaleType, getScaleText(scaleType));
             }
         });
 
@@ -312,16 +309,10 @@ public class StarSettingsView extends FrameLayout implements IControlComponent {
 
     // ---------- 公共方法：更新UI ----------
     public void setScaleType(int scaleType) {
-        String text = getScaleText(scaleType);
-        for (int i = 0; i < mChipGroupScale.getChildCount(); i++) {
-            View child = mChipGroupScale.getChildAt(i);
-            if (child instanceof Chip) {
-                Chip chip = (Chip) child;
-                if (chip.getText().toString().equals(text)) {
-                    chip.setChecked(true);
-                    break;
-                }
-            }
+        int chipId = getScaleTypeChipId(scaleType);
+        if (chipId != 0) {
+            Chip chip = findViewById(chipId);
+            if (chip != null) chip.setChecked(true);
         }
     }
 
@@ -370,19 +361,27 @@ public class StarSettingsView extends FrameLayout implements IControlComponent {
     }
 
     // ---------- 辅助方法 ----------
-    private int mapScaleTextToType(String text) {
-        switch (text) {
-            case "16 : 9": return VideoView.SCREEN_SCALE_16_9;
-            case "4 : 3":  return VideoView.SCREEN_SCALE_4_3;
-            case "默 认":   return VideoView.SCREEN_SCALE_DEFAULT;
-            case "填 充":   return VideoView.SCREEN_SCALE_MATCH_PARENT;
-            case "缩 放":   return VideoView.SCREEN_SCALE_ORIGINAL;
-            case "裁 剪":   return VideoView.SCREEN_SCALE_CENTER_CROP;
-            default:        return VideoView.SCREEN_SCALE_DEFAULT;
+    private static int mapChipIdToScaleType(int chipId) {
+        if (chipId == R.id.chip_scale_16_9)    return VideoView.SCREEN_SCALE_16_9;
+        if (chipId == R.id.chip_scale_4_3)     return VideoView.SCREEN_SCALE_4_3;
+        if (chipId == R.id.chip_scale_fill)    return VideoView.SCREEN_SCALE_MATCH_PARENT;
+        if (chipId == R.id.chip_scale_original)return VideoView.SCREEN_SCALE_ORIGINAL;
+        if (chipId == R.id.chip_scale_crop)    return VideoView.SCREEN_SCALE_CENTER_CROP;
+        return VideoView.SCREEN_SCALE_DEFAULT;
+    }
+
+    private static int getScaleTypeChipId(int type) {
+        switch (type) {
+            case VideoView.SCREEN_SCALE_16_9:         return R.id.chip_scale_16_9;
+            case VideoView.SCREEN_SCALE_4_3:          return R.id.chip_scale_4_3;
+            case VideoView.SCREEN_SCALE_MATCH_PARENT: return R.id.chip_scale_fill;
+            case VideoView.SCREEN_SCALE_ORIGINAL:     return R.id.chip_scale_original;
+            case VideoView.SCREEN_SCALE_CENTER_CROP:  return R.id.chip_scale_crop;
+            default:                                   return R.id.chip_scale_default;
         }
     }
 
-    private String getScaleText(int type) {
+    private static String getScaleText(int type) {
         switch (type) {
             case VideoView.SCREEN_SCALE_16_9:         return "16 : 9";
             case VideoView.SCREEN_SCALE_4_3:          return "4 : 3";

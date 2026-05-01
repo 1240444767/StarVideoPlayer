@@ -2,7 +2,6 @@ package com.star.play;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.res.TypedArray;
 import android.graphics.Color;
@@ -30,22 +29,12 @@ import xyz.doikki.videoplayer.player.VideoView;
 
 public class StarVideoPlayer extends VideoView {
 
-    private static final String PREFS_NAME = "star_video_prefs";
-    private static final String KEY_LONG_PRESS_SPEED = "long_press_speed";
-    private static final String KEY_LONG_PRESS_SPEED_TEXT = "long_press_speed_text";
-    private static final String KEY_MUTE = "mute";
-    private static final String KEY_SKIP_START_PROGRESS = "skip_start_progress";
-    private static final String KEY_SKIP_END_PROGRESS = "skip_end_progress";
-    private static final String KEY_AUTO_NEXT = "auto_next";
-    private static final String KEY_HIDE_PROGRESS = "hide_progress";
-    private static final String KEY_AUTO_ROTATE = "auto_rotate";
-
     private static final String TIMING_OFF = "不启用";
     private static final String TIMING_AFTER_CURRENT = "播完当前";
     private static final String TIMING_30_MIN = "30分钟";
     private static final String TIMING_60_MIN = "60分钟";
 
-    private SharedPreferences mPrefs;
+    private StarPlayerSettings mSettings;
 
     private float mCurrentSpeed = 1.0f;
     private String mCurrentSpeedText = "1.0x";
@@ -129,7 +118,7 @@ public class StarVideoPlayer extends VideoView {
     }
 
     private void init(AttributeSet attrs) {
-        mPrefs = getContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        mSettings = new StarPlayerSettings(getContext());
 
         loadSettings();
         setupController();
@@ -150,11 +139,13 @@ public class StarVideoPlayer extends VideoView {
     }
 
     private void loadSettings() {
-        mLongPressSpeed = mPrefs.getFloat(KEY_LONG_PRESS_SPEED, 3.0f);
-        mLongPressSpeedText = mPrefs.getString(KEY_LONG_PRESS_SPEED_TEXT, "3.0x");
-        setMute(mPrefs.getBoolean(KEY_MUTE, false));
-        mHideProgress = mPrefs.getBoolean(KEY_HIDE_PROGRESS, false);
-        mAutoRotate = mPrefs.getBoolean(KEY_AUTO_ROTATE, false);
+        mLongPressSpeed = mSettings.getLongPressSpeed();
+        mLongPressSpeedText = mSettings.getLongPressSpeedText();
+        setMute(mSettings.isMute());
+        mHideProgress = mSettings.isHideProgress();
+        mAutoRotate = mSettings.isAutoRotate();
+        mScreenScaleType = mSettings.getScreenScale();
+        setScreenScaleType(mScreenScaleType);
     }
 
     private void setupController() {
@@ -220,22 +211,23 @@ public class StarVideoPlayer extends VideoView {
         mSettingsView.setOnScaleChangeListener((scaleType, scaleText) -> {
             setScreenScaleType(scaleType);
             mScreenScaleType = scaleType;
+            mSettings.setScreenScale(scaleType);
         });
 
         mSettingsView.setOnMuteChangeListener(isMute -> {
             setMute(isMute);
-            mPrefs.edit().putBoolean(KEY_MUTE, isMute).apply();
+            mSettings.setMute(isMute);
         });
 
         mSettingsView.setOnHideProgressChangeListener(isHide -> {
             mHideProgress = isHide;
             mBottomView.setShowBottomProgress(!isHide);
-            mPrefs.edit().putBoolean(KEY_HIDE_PROGRESS, isHide).apply();
+            mSettings.setHideProgress(isHide);
         });
 
         mSettingsView.setOnAutoRotateChangeListener(isAutoRotate -> {
             mAutoRotate = isAutoRotate;
-            mPrefs.edit().putBoolean(KEY_AUTO_ROTATE, isAutoRotate).apply();
+            mSettings.setAutoRotate(isAutoRotate);
             if (isAutoRotate) {
                 checkVideoOrientation();
             }
@@ -248,25 +240,18 @@ public class StarVideoPlayer extends VideoView {
         mSettingsView.setOnLongPressSpeedChangeListener(speed -> {
             mLongPressSpeed = speed;
             mLongPressSpeedText = String.format(Locale.US, "%.1fX", speed);
-            mPrefs.edit()
-                    .putFloat(KEY_LONG_PRESS_SPEED, speed)
-                    .putString(KEY_LONG_PRESS_SPEED_TEXT, mLongPressSpeedText)
-                    .apply();
+            mSettings.setLongPressSpeed(speed);
         });
 
         mSettingsView.setOnSkipStartChangeListener((progress, timeText) -> {
-            mPrefs.edit()
-                    .putInt(KEY_SKIP_START_PROGRESS, progress)
-                    .apply();
+            mSettings.setSkipStartProgress(progress);
             if (getCurrentPosition() < progress * 1000L) {
                 seekTo(progress * 1000L);
             }
         });
 
         mSettingsView.setOnSkipEndChangeListener((progress, timeText) -> {
-            mPrefs.edit()
-                    .putInt(KEY_SKIP_END_PROGRESS, progress)
-                    .apply();
+            mSettings.setSkipEndProgress(progress);
         });
 
         mController.setOnSpeedListener(() -> {
@@ -284,7 +269,7 @@ public class StarVideoPlayer extends VideoView {
         });
 
         mBottomView.setOnProgressListener(() -> {
-            int skipEndProgress = mPrefs.getInt(KEY_SKIP_END_PROGRESS, 0);
+            int skipEndProgress = mSettings.getSkipEndProgress();
             long skipEndMs = skipEndProgress * 1000L;
             if (skipEndMs > 0 && (getDuration() - getCurrentPosition()) <= skipEndMs) {
                 seekTo(getDuration());
@@ -300,11 +285,11 @@ public class StarVideoPlayer extends VideoView {
         mSettingsView.setHideProgressChecked(mHideProgress);
         mSettingsView.setAutoRotateChecked(mAutoRotate);
 
-        int startProgress = mPrefs.getInt(KEY_SKIP_START_PROGRESS, 0);
+        int startProgress = mSettings.getSkipStartProgress();
         String startText = formatSkipTime(startProgress);
         mSettingsView.setSkipStartTime(startText, startProgress);
 
-        int endProgress = mPrefs.getInt(KEY_SKIP_END_PROGRESS, 0);
+        int endProgress = mSettings.getSkipEndProgress();
         String endText = formatSkipTime(endProgress);
         mSettingsView.setSkipEndTime(endText, endProgress);
     }
@@ -325,7 +310,7 @@ public class StarVideoPlayer extends VideoView {
 
     private void handlePlayState(int playState) {
         if (playState == STATE_PREPARING) {
-            int startProgress = mPrefs.getInt(KEY_SKIP_START_PROGRESS, 0);
+            int startProgress = mSettings.getSkipStartProgress();
             if (startProgress > 0) {
                 seekTo(startProgress * 1000L);
             }
@@ -340,7 +325,7 @@ public class StarVideoPlayer extends VideoView {
                     activity.finish();
                 }
             }
-            if (mPrefs.getBoolean(KEY_AUTO_NEXT, true) && mOnDownSetClickListener != null) {
+            if (mSettings.isAutoNext() && mOnDownSetClickListener != null) {
                 mOnDownSetClickListener.onClick(null);
             }
         }
@@ -435,6 +420,38 @@ public class StarVideoPlayer extends VideoView {
         return mEpisodeView.isEpisodeShowing();
     }
 
+    public void setEpisodePanelTitle(String title) {
+        mEpisodeView.setPanelTitle(title);
+    }
+
+    public void setEpisodePanelTitleColor(int color) {
+        mEpisodeView.setPanelTitleColor(color);
+    }
+
+    public void setEpisodePanelTitleBarVisibility(int visibility) {
+        mEpisodeView.setTitleBarVisibility(visibility);
+    }
+
+    public void setEpisodePanelCloseButtonVisibility(int visibility) {
+        mEpisodeView.setCloseButtonVisibility(visibility);
+    }
+
+    public void setEpisodeCustomContentView(android.view.View view) {
+        mEpisodeView.setCustomContentView(view);
+    }
+
+    public void setEpisodeCustomContentView(int layoutResId) {
+        mEpisodeView.setCustomContentView(layoutResId);
+    }
+
+    public void restoreEpisodeDefaultContent() {
+        mEpisodeView.restoreDefaultContent();
+    }
+
+    public android.widget.FrameLayout getEpisodeContentContainer() {
+        return mEpisodeView.getContentContainer();
+    }
+
     public void showSettingsPanel() {
         mSettingsView.show();
     }
@@ -462,10 +479,7 @@ public class StarVideoPlayer extends VideoView {
         mLongPressSpeed = speed;
         mLongPressSpeedText = String.format(Locale.US, "%.1fX", speed);
         mSettingsView.setLongPressSpeed(speed);
-        mPrefs.edit()
-                .putFloat(KEY_LONG_PRESS_SPEED, speed)
-                .putString(KEY_LONG_PRESS_SPEED_TEXT, mLongPressSpeedText)
-                .apply();
+        mSettings.setLongPressSpeed(speed);
     }
 
     public float getLongPressSpeed() {
@@ -475,7 +489,7 @@ public class StarVideoPlayer extends VideoView {
     public void setMuted(boolean mute) {
         setMute(mute);
         mSettingsView.setMuteChecked(mute);
-        mPrefs.edit().putBoolean(KEY_MUTE, mute).apply();
+        mSettings.setMute(mute);
     }
 
     public boolean isMuted() {
@@ -486,6 +500,7 @@ public class StarVideoPlayer extends VideoView {
         mScreenScaleType = scaleType;
         setScreenScaleType(scaleType);
         mSettingsView.setScaleType(scaleType);
+        mSettings.setScreenScale(scaleType);
     }
 
     public int getScreenScale() {
@@ -496,7 +511,7 @@ public class StarVideoPlayer extends VideoView {
         mHideProgress = hide;
         mBottomView.setShowBottomProgress(!hide);
         mSettingsView.setHideProgressChecked(hide);
-        mPrefs.edit().putBoolean(KEY_HIDE_PROGRESS, hide).apply();
+        mSettings.setHideProgress(hide);
     }
 
     public boolean isHideProgress() {
@@ -506,7 +521,7 @@ public class StarVideoPlayer extends VideoView {
     public void setAutoRotate(boolean autoRotate) {
         mAutoRotate = autoRotate;
         mSettingsView.setAutoRotateChecked(autoRotate);
-        mPrefs.edit().putBoolean(KEY_AUTO_ROTATE, autoRotate).apply();
+        mSettings.setAutoRotate(autoRotate);
         if (autoRotate) {
             checkVideoOrientation();
         }
@@ -520,26 +535,22 @@ public class StarVideoPlayer extends VideoView {
         if (seconds < 0) seconds = 0;
         String timeText = formatSkipTime(seconds);
         mSettingsView.setSkipStartTime(timeText, seconds);
-        mPrefs.edit()
-                .putInt(KEY_SKIP_START_PROGRESS, seconds)
-                .apply();
+        mSettings.setSkipStartProgress(seconds);
     }
 
     public int getSkipStartTime() {
-        return mPrefs.getInt(KEY_SKIP_START_PROGRESS, 0);
+        return mSettings.getSkipStartProgress();
     }
 
     public void setSkipEndTime(int seconds) {
         if (seconds < 0) seconds = 0;
         String timeText = formatSkipTime(seconds);
         mSettingsView.setSkipEndTime(timeText, seconds);
-        mPrefs.edit()
-                .putInt(KEY_SKIP_END_PROGRESS, seconds)
-                .apply();
+        mSettings.setSkipEndProgress(seconds);
     }
 
     public int getSkipEndTime() {
-        return mPrefs.getInt(KEY_SKIP_END_PROGRESS, 0);
+        return mSettings.getSkipEndProgress();
     }
 
     public void setTimingOption(String option) {
@@ -551,11 +562,11 @@ public class StarVideoPlayer extends VideoView {
     }
 
     public void setAutoNext(boolean autoNext) {
-        mPrefs.edit().putBoolean(KEY_AUTO_NEXT, autoNext).apply();
+        mSettings.setAutoNext(autoNext);
     }
 
     public boolean isAutoNext() {
-        return mPrefs.getBoolean(KEY_AUTO_NEXT, true);
+        return mSettings.isAutoNext();
     }
 
     public void setVisibilityBottom(int selectVisibility, int speedVisibility, 

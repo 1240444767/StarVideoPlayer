@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity3">
+
+    <com.star.play.StarVideoPlayer
+        android:id="@+id/player"
+        android:layout_width="match_parent"
+        android:layout_height="250dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:text="测试页面：多播放源自定义选集面板\n\n功能说明：\n• 点击选集按钮打开自定义面板\n• 第一行显示当前播放源，点击可切换\n• 下方网格显示16集剧集\n• 支持上一集/下一集切换"
+        android:textSize="14sp" />
+
+</LinearLayout>

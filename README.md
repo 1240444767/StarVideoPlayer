@@ -2,12 +2,11 @@
 [![](https://jitpack.io/v/1240444767/StarVideoPlayer.svg)](https://jitpack.io/#1240444767/StarVideoPlayer)
 ![GitHub Repo stars](https://img.shields.io/github/stars/1240444767/StarVideoPlayer)
 
-专为短剧/视频应用设计的 Android 播放器，基于 DKPlayer + Media3。
+专为短剧/视频应用设计的 Android 播放器，基于 DKPlayer。
 
 ## 功能特性
 
-- **Media3 内核** — 默认 `androidx.media3.exoplayer`，HLS 缓冲追踪精准；可切 ExoPlayer 2.x / IJKPlayer
-- **激进缓冲** — 暂停时继续下载，最大 1 小时缓冲量，SeekBar 实时显示缓冲进度
+- **播放内核** — 默认 ExoPlayer 2.x，可通过 `setPlayerFactory()` 切换 IJKPlayer 等
 - **选集功能** — 默认适配器 / 自定义适配器 / 完全自定义内容面板
 - **倍速播放** — 0.5x ~ 3.0x，弹出菜单选择
 - **长按倍速** — 默认 3x，1.0x ~ 10.0x 可调
@@ -19,9 +18,8 @@
 - **横竖全屏** — 横屏全屏 + 竖屏全屏双模式
 - **刘海屏适配** / **自动旋转**
 - **投屏接口** — 预留回调 + 内置 DLNA-Cast 模块
-- **按钮可见性** — 底部/顶部各按钮独立控制，区分全屏/非全屏
-- **颜色自定义** — 标题栏、底部栏文字/图标/背景色
-- **缓冲进度条** — SeekBar 显示缓冲范围，设置中可开关
+- **按钮可见性** — `setButtonVisible(PlayerButton, vis)` 统一入口，区分全屏/非全屏
+- **颜色自定义** — `setColor(PlayerColor, color)` 一键设色
 - **短剧播放器** — `StarShortDramaPlayer`，自动精简按钮
 - **底部栏合二为一** — 单 XML 双容器，切换无开销
 
@@ -35,7 +33,7 @@
 dependencies {
     implementation 'xyz.doikki.android.dkplayer:dkplayer-java:3.3.7'
     // Media3 由本库自带，无需额外引入
-    implementation 'com.github.1240444767:StarVideoPlayer:2.1.0'
+    implementation 'com.github.1240444767:StarVideoPlayer:2.1.8'
 }
 ```
 
@@ -68,7 +66,7 @@ dependencies {
 
 ```java
 StarVideoPlayer player = findViewById(R.id.player);
-// 默认 Media3 内核，无需手动设 PlayerFactory
+// 默认 ExoPlayer 内核，无需手动设 PlayerFactory
 
 player.setUrl("https://example.com/video.mp4");
 player.addDefaultControlComponent("视频标题", false);
@@ -85,9 +83,7 @@ player.start();
 **切换内核：**
 
 ```java
-// ExoPlayer 2.x
-player.setPlayerFactory(ExoMediaPlayerFactory.create());
-// IJKPlayer
+// 默认 ExoPlayer，如需 IJKPlayer：
 player.setPlayerFactory(IjkPlayerFactory.create());
 ```
 
@@ -209,7 +205,7 @@ player.showSettingsPanel();
 player.hideSettingsPanel();
 ```
 
-面板内可调：画面比例、静音、隐藏进度条、**显示缓冲进度**、自动旋转、定时关闭、长按倍速、跳过片头片尾。全部自动持久化。
+面板内可调：画面比例、静音、隐藏进度条、自动旋转、定时关闭、长按倍速、跳过片头片尾。全部自动持久化。
 
 ---
 
@@ -244,20 +240,17 @@ player.hideSettingsPanel();
 
 ## 依赖说明
 
-基于 [DKPlayer](https://github.com/Doikki/DKVideoPlayer)，播放内核使用 [Media3](https://developer.android.com/media/media3/exoplayer)。
+基于 [DKPlayer](https://github.com/Doikki/DKVideoPlayer)。
 
 ---
 
 ## 更新日志
 
-### v2.1.0 (2026-05-03)
+### v2.1.8 (2026-05-03)
 
 #### 新增
-- ✨ **Media3 内核**替代 ExoPlayer 2.x — HLS 缓冲追踪精准，自动识别 m3u8/MP4
-- ✨ **激进缓冲** — 暂停时继续下载，最大 1 小时缓冲量，SeekBar 实时白色缓存条
-- ✨ SeekBar 缓冲进度（`SecondaryProgress`），设置面板可开关
-- ✨ 统一 API —— `setButtonVisible(PlayerButton, vis)` 替代 25 个按钮方法
-- ✨ 统一 API —— `setColor(PlayerColor, color)` 替代 7 个颜色方法
+- ✨ 统一按钮 API —— `setButtonVisible(PlayerButton, vis)` 替代 25 个分散方法
+- ✨ 统一颜色 API —— `setColor(PlayerColor, color)` 替代 7 个分散方法
 
 #### 优化
 - 🔧 底部栏 XML 三合一，切换零开销
@@ -269,12 +262,6 @@ player.hideSettingsPanel();
 - 🐛 画面比例重启后丢失 — 已持久化
 
 ### v2.0.0 (2026-05-02)
-
-#### 修复问题
-- 🐛 修复画面比例设置重启后丢失 — 画面比例现已持久化到 SharedPreferences，重启自动恢复
-
-#### 优化改进
-- 🔧 内置选集适配器 `StarDefaultEpisodeAdapter` 改为 package-private，支持通过继承扩展
 - 🔧 抽取 `StarPlayerSettings` 统一管理所有 SharedPreferences 持久化
 - 🔧 抽取 `StarCutoutHelper` 合并 4 处重复的刘海屏适配代码
 - 🔧 设置面板画面比例映射从字符串匹配改为资源 ID 匹配

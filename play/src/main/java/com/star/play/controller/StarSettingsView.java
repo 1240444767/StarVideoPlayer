@@ -49,9 +49,6 @@ public class StarSettingsView extends FrameLayout implements IControlComponent {
     // 自动旋转
     private MaterialSwitch mAutoRotateSwitch;
 
-    // 显示缓冲进度
-    private MaterialSwitch mBufferedProgressSwitch;
-
     // 定时关闭
     private MaterialButton mBtnTiming;
 
@@ -87,10 +84,6 @@ public class StarSettingsView extends FrameLayout implements IControlComponent {
         void onAutoRotateChanged(boolean isAutoRotate);
     }
 
-    public interface OnBufferedProgressChangeListener {
-        void onBufferedProgressChanged(boolean enabled);
-    }
-
     // 定时关闭选项选中监听器
     public interface OnTimingOptionSelectedListener {
         void onTimingOptionSelected(String option); // option: "不启用", "播完当前", "30分钟", "60分钟"
@@ -112,7 +105,6 @@ public class StarSettingsView extends FrameLayout implements IControlComponent {
     private OnMuteChangeListener mOnMuteChangeListener;
     private OnHideProgressChangeListener mOnHideProgressChangeListener;
     private OnAutoRotateChangeListener mOnAutoRotateChangeListener;
-    private OnBufferedProgressChangeListener mOnBufferedProgressChangeListener;
     private OnTimingOptionSelectedListener mOnTimingOptionSelectedListener;
     private OnLongPressSpeedChangeListener mOnLongPressSpeedChangeListener;
     private OnSkipStartChangeListener mOnSkipStartChangeListener;
@@ -133,10 +125,6 @@ public class StarSettingsView extends FrameLayout implements IControlComponent {
 
     public void setOnAutoRotateChangeListener(OnAutoRotateChangeListener l) {
         mOnAutoRotateChangeListener = l;
-    }
-
-    public void setOnBufferedProgressChangeListener(OnBufferedProgressChangeListener l) {
-        mOnBufferedProgressChangeListener = l;
     }
 
     public void setOnTimingOptionSelectedListener(OnTimingOptionSelectedListener l) {
@@ -186,8 +174,6 @@ public class StarSettingsView extends FrameLayout implements IControlComponent {
         mHideProgressSwitch = findViewById(R.id.switch_hide_progress);
         // 自动旋转
         mAutoRotateSwitch = findViewById(R.id.switch_auto_rotate);
-        // 显示缓冲进度
-        mBufferedProgressSwitch = findViewById(R.id.switch_buffered_progress);
         // 定时关闭按钮
         mBtnTiming = findViewById(R.id.btn_timing);
         // 长按倍速
@@ -253,13 +239,6 @@ public class StarSettingsView extends FrameLayout implements IControlComponent {
         mAutoRotateSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (mOnAutoRotateChangeListener != null) {
                 mOnAutoRotateChangeListener.onAutoRotateChanged(isChecked);
-            }
-        });
-
-        // 显示缓冲进度开关
-        mBufferedProgressSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (mOnBufferedProgressChangeListener != null) {
-                mOnBufferedProgressChangeListener.onBufferedProgressChanged(isChecked);
             }
         });
 
@@ -347,10 +326,6 @@ public class StarSettingsView extends FrameLayout implements IControlComponent {
 
     public void setAutoRotateChecked(boolean isAutoRotate) {
         mAutoRotateSwitch.setChecked(isAutoRotate);
-    }
-
-    public void setBufferedProgressChecked(boolean enabled) {
-        mBufferedProgressSwitch.setChecked(enabled);
     }
 
     public void setTimingText(String text) {

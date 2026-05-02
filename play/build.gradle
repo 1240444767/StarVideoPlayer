@@ -64,7 +64,4 @@ dependencies {
     androidTestImplementation libs.espresso.core
     implementation 'xyz.doikki.android.dkplayer:dkplayer-java:3.3.7'
     implementation 'xyz.doikki.android.dkplayer:player-exo:3.3.7'
-    // Media3 适配，HLS 缓冲追踪更准
-    api 'androidx.media3:media3-exoplayer:1.6.1'
-    api 'androidx.media3:media3-exoplayer-hls:1.6.1'
 }

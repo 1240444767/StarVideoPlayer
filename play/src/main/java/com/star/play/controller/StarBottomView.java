@@ -359,21 +359,7 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
         applyButtonVisibility();
     }
 
-    private int mLastBufferedPercent;
-
-    public void clearBufferedProgress() {
-        mLastBufferedPercent = 0;
-        nSeekBar.setSecondaryProgress(0);
-        fSeekBar.setSecondaryProgress(0);
-        if (mBottomProgress != null) mBottomProgress.setSecondaryProgress(0);
-    }
-
     public void setBufferedProgress(int percent) {
-        if (percent <= 0) {
-            percent = mLastBufferedPercent;
-        } else {
-            mLastBufferedPercent = percent;
-        }
         int sp = Math.min(percent, 100) * 10;
         nSeekBar.setSecondaryProgress(sp);
         fSeekBar.setSecondaryProgress(sp);

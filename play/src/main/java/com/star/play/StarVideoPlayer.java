@@ -17,10 +17,9 @@ import com.star.play.controller.StarGestureView;
 import com.star.play.controller.StarPrepareView;
 import com.star.play.controller.StarSettingsView;
 import com.star.play.controller.StarTitleView;
-import com.star.play.media3.Media3PlayerFactory;
-
 import java.util.Locale;
 
+import xyz.doikki.videoplayer.exo.ExoMediaPlayerFactory;
 import xyz.doikki.videoplayer.player.VideoView;
 
 public class StarVideoPlayer extends VideoView {
@@ -52,7 +51,6 @@ public class StarVideoPlayer extends VideoView {
     private int mCurrentEpisodeIndex;
 
     private int mScreenScaleType = SCREEN_SCALE_DEFAULT;
-    private boolean mShowBufferedProgress = true;
     private boolean mHideProgress;
     private boolean mAutoRotate;
     private String mCurrentUrl;
@@ -84,7 +82,7 @@ public class StarVideoPlayer extends VideoView {
     }
 
     private void init(AttributeSet attrs) {
-        setPlayerFactory(new Media3PlayerFactory());
+        setPlayerFactory(ExoMediaPlayerFactory.create());
         mSettings = new StarPlayerSettings(getContext());
         loadSettings();
         setupController();
@@ -103,7 +101,6 @@ public class StarVideoPlayer extends VideoView {
         mLongPressSpeedText = mSettings.getLongPressSpeedText();
         setMute(mSettings.isMute());
         mHideProgress = mSettings.isHideProgress();
-        mShowBufferedProgress = mSettings.isBufferedProgressEnabled();
         mAutoRotate = mSettings.isAutoRotate();
         mScreenScaleType = mSettings.getScreenScale();
         setScreenScaleType(mScreenScaleType);
@@ -150,7 +147,6 @@ public class StarVideoPlayer extends VideoView {
             if (mSettings.getSkipEndProgress() > 0 && (dur - pos) <= mSettings.getSkipEndProgress() * 1000L) {
                 seekTo(dur);
             }
-            if (mShowBufferedProgress) mBottomView.setBufferedProgress(getBufferedPercentage());
         });
 
         // ── 选集 ──
@@ -169,7 +165,6 @@ public class StarVideoPlayer extends VideoView {
         mSettingsView.setOnMuteChangeListener(m -> { setMute(m); mSettings.setMute(m); });
         mSettingsView.setOnHideProgressChangeListener(h -> { mHideProgress = h; mBottomView.setShowBottomProgress(!h); mSettings.setHideProgress(h); });
         mSettingsView.setOnAutoRotateChangeListener(a -> { mAutoRotate = a; mSettings.setAutoRotate(a); if (a) checkVideoOrientation(); });
-        mSettingsView.setOnBufferedProgressChangeListener(e -> { mShowBufferedProgress = e; mSettings.setBufferedProgressEnabled(e); if (!e) mBottomView.clearBufferedProgress(); });
         mSettingsView.setOnTimingOptionSelectedListener(this::applyTiming);
         mSettingsView.setOnLongPressSpeedChangeListener(s -> { mLongPressSpeed = s; mLongPressSpeedText = String.format(Locale.US, "%.1fX", s); mSettings.setLongPressSpeed(s); });
         mSettingsView.setOnSkipStartChangeListener((p, t) -> { mSettings.setSkipStartProgress(p); if (getCurrentPosition() < p * 1000L) seekTo(p * 1000L); });
@@ -189,7 +184,6 @@ public class StarVideoPlayer extends VideoView {
         mSettingsView.setLongPressSpeed(mLongPressSpeed);
         mSettingsView.setHideProgressChecked(mHideProgress);
         mSettingsView.setAutoRotateChecked(mAutoRotate);
-        mSettingsView.setBufferedProgressChecked(mShowBufferedProgress);
         int ss = mSettings.getSkipStartProgress(), se = mSettings.getSkipEndProgress();
         mSettingsView.setSkipStartTime(formatSkipTime(ss), ss);
         mSettingsView.setSkipEndTime(formatSkipTime(se), se);

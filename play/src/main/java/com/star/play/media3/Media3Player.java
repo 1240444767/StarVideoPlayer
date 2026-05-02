@@ -267,5 +267,10 @@ public class Media3Player extends AbstractPlayer implements Player.Listener {
         public long getBackBufferDurationUs() {
             return 0;
         }
+
+        @Override
+        public boolean retainBackBufferFromKeyframe() {
+            return false;
+        }
     }
 }

@@ -3,12 +3,8 @@ package com.star.play;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
-import android.content.res.TypedArray;
-import android.graphics.Color;
 import android.os.CountDownTimer;
 import android.util.AttributeSet;
-import android.view.Display;
-import android.view.Surface;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,22 +14,25 @@ import com.star.play.controller.StarCompleteView;
 import com.star.play.controller.StarEpisodeView;
 import com.star.play.controller.StarErrorView;
 import com.star.play.controller.StarGestureView;
-import com.star.play.controller.StarLiveControlView;
 import com.star.play.controller.StarPrepareView;
 import com.star.play.controller.StarSettingsView;
 import com.star.play.controller.StarTitleView;
+import com.star.play.media3.Media3PlayerFactory;
 
 import java.util.Locale;
 
-import xyz.doikki.videoplayer.exo.ExoMediaPlayerFactory;
 import xyz.doikki.videoplayer.player.VideoView;
 
 public class StarVideoPlayer extends VideoView {
+
+    // ── 常量 ──────────────────────────────────
 
     private static final String TIMING_OFF = "不启用";
     private static final String TIMING_AFTER_CURRENT = "播完当前";
     private static final String TIMING_30_MIN = "30分钟";
     private static final String TIMING_60_MIN = "60分钟";
+
+    // ── 状态字段 ──────────────────────────────
 
     private StarPlayerSettings mSettings;
 
@@ -45,110 +44,72 @@ public class StarVideoPlayer extends VideoView {
     private String mTimingText = TIMING_OFF;
     private CountDownTimer mCountDownTimer;
 
-    private int mThemeColor;
-
     private StarStandardVideoController mController;
     private StarBottomView mBottomView;
     private StarEpisodeView mEpisodeView;
     private StarSettingsView mSettingsView;
     private StarTitleView mTitleView;
-    private int mCurrentEpisodeIndex = 0;
+    private int mCurrentEpisodeIndex;
 
     private int mScreenScaleType = SCREEN_SCALE_DEFAULT;
-    private boolean mHideProgress = false;
-    private boolean mAutoRotate = false;
+    private boolean mShowBufferedProgress = true;
+    private boolean mHideProgress;
+    private boolean mAutoRotate;
     private String mCurrentUrl;
 
-    public interface OnWindowClickListener {
-        void onClick(android.view.View view);
-    }
+    // ── 监听接口 ──────────────────────────────
 
-    public interface OnScreenClickListener {
-        void onClick(android.view.View view);
-    }
+    public interface OnWindowClickListener  { void onClick(android.view.View v); }
+    public interface OnScreenClickListener  { void onClick(android.view.View v); }
+    public interface OnSelectClickListener  { void onClick(android.view.View v); }
+    public interface OnUpSetClickListener   { void onClick(android.view.View v); }
+    public interface OnDownSetClickListener { void onClick(android.view.View v); }
 
-    public interface OnSelectClickListener {
-        void onClick(android.view.View view);
-    }
-
-    public interface OnUpSetClickListener {
-        void onClick(android.view.View view);
-    }
-
-    public interface OnDownSetClickListener {
-        void onClick(android.view.View view);
-    }
-
-    private OnWindowClickListener mOnWindowClickListener;
-    private OnScreenClickListener mOnScreenClickListener;
-    private OnSelectClickListener mOnSelectClickListener;
-    private OnUpSetClickListener mOnUpSetClickListener;
+    private OnWindowClickListener  mOnWindowClickListener;
+    private OnScreenClickListener  mOnScreenClickListener;
+    private OnSelectClickListener  mOnSelectClickListener;
+    private OnUpSetClickListener   mOnUpSetClickListener;
     private OnDownSetClickListener mOnDownSetClickListener;
 
-    public void setOnWindowClickListener(OnWindowClickListener l) {
-        mOnWindowClickListener = l;
-    }
+    // ═══════════════════════════════════════════
+    // 构造 & 初始化
+    // ═══════════════════════════════════════════
 
-    public void setOnScreenClickListener(OnScreenClickListener l) {
-        mOnScreenClickListener = l;
-    }
+    public StarVideoPlayer(@NonNull Context c) { this(c, null); }
+    public StarVideoPlayer(@NonNull Context c, @Nullable AttributeSet a) { this(c, a, 0); }
 
-    public void setOnSelectClickListener(OnSelectClickListener l) {
-        mOnSelectClickListener = l;
-    }
-
-    public void setOnUpSetClickListener(OnUpSetClickListener l) {
-        mOnUpSetClickListener = l;
-    }
-
-    public void setOnDownSetClickListener(OnDownSetClickListener l) {
-        mOnDownSetClickListener = l;
-    }
-
-    public StarVideoPlayer(@NonNull Context context) {
-        this(context, null);
-    }
-
-    public StarVideoPlayer(@NonNull Context context, @Nullable AttributeSet attrs) {
-        this(context, attrs, 0);
-    }
-
-    public StarVideoPlayer(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
+    public StarVideoPlayer(@NonNull Context context, @Nullable AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
         init(attrs);
     }
 
     private void init(AttributeSet attrs) {
-        setPlayerFactory(ExoMediaPlayerFactory.create());
+        setPlayerFactory(new Media3PlayerFactory());
         mSettings = new StarPlayerSettings(getContext());
-
         loadSettings();
         setupController();
         setupControllerCallbacks();
         syncSettingsView();
-
         addOnStateChangeListener(new OnStateChangeListener() {
-            @Override
-            public void onPlayerStateChanged(int playerState) {
-                handlePlayerState(playerState);
-            }
-
-            @Override
-            public void onPlayStateChanged(int playState) {
-                handlePlayState(playState);
-            }
+            @Override public void onPlayerStateChanged(int ps) { handlePlayerState(ps); }
+            @Override public void onPlayStateChanged(int ps)  { handlePlayState(ps); }
         });
     }
+
+    // ── 持久化恢复 ──
 
     private void loadSettings() {
         mLongPressSpeed = mSettings.getLongPressSpeed();
         mLongPressSpeedText = mSettings.getLongPressSpeedText();
         setMute(mSettings.isMute());
         mHideProgress = mSettings.isHideProgress();
+        mShowBufferedProgress = mSettings.isBufferedProgressEnabled();
         mAutoRotate = mSettings.isAutoRotate();
         mScreenScaleType = mSettings.getScreenScale();
         setScreenScaleType(mScreenScaleType);
     }
+
+    // ── 控制器 & 组件装配 ──
 
     private void setupController() {
         mController = new StarStandardVideoController(getContext());
@@ -158,17 +119,13 @@ public class StarVideoPlayer extends VideoView {
         mTitleView = new StarTitleView(getContext());
 
         mController.addControlComponent(
-                new StarCompleteView(getContext()),
-                new StarErrorView(getContext()),
-                buildPrepareView(),
-                mTitleView
-        );
+                new StarCompleteView(getContext()), new StarErrorView(getContext()),
+                buildPrepareView(), mTitleView);
         mController.addControlComponent(new StarGestureView(getContext()));
         mController.addControlComponent(mEpisodeView);
         mController.addControlComponent(mSettingsView);
         mController.addControlComponent(mBottomView);
         mController.setCanChangePosition(true);
-
         setVideoController(mController);
     }
 
@@ -178,108 +135,52 @@ public class StarVideoPlayer extends VideoView {
         return v;
     }
 
+    // ── 回调连线 ──
+
     private void setupControllerCallbacks() {
         mBottomView.setShowBottomProgress(!mHideProgress);
 
-        mBottomView.setOnSpeedOptionSelectedListener((speed, speedText) -> {
-            setPlaybackSpeed(speed);
-        });
-
-        mBottomView.setOnUpSetClickListener(v -> {
-            if (mOnUpSetClickListener != null) mOnUpSetClickListener.onClick(v);
-        });
-
-        mBottomView.setOnDownSetClickListener(v -> {
-            if (mOnDownSetClickListener != null) mOnDownSetClickListener.onClick(v);
-        });
-
+        // ── 底部 ──
+        mBottomView.setOnSpeedOptionSelectedListener((s, t) -> setPlaybackSpeed(s));
+        mBottomView.setOnUpSetClickListener(v -> { if (mOnUpSetClickListener != null) mOnUpSetClickListener.onClick(v); });
+        mBottomView.setOnDownSetClickListener(v -> { if (mOnDownSetClickListener != null) mOnDownSetClickListener.onClick(v); });
         mBottomView.setOnSelectClickListener(v -> mEpisodeView.show());
+        mBottomView.setOnProgressListener(() -> {
+            long dur = getDuration(), pos = getCurrentPosition();
+            if (mSettings.getSkipEndProgress() > 0 && (dur - pos) <= mSettings.getSkipEndProgress() * 1000L) {
+                seekTo(dur);
+            }
+            if (mShowBufferedProgress) mBottomView.setBufferedProgress(getBufferedPercentage());
+        });
 
-        mEpisodeView.setOnEpisodeSelectListener((index, title) -> {
-            mCurrentEpisodeIndex = index;
+        // ── 选集 ──
+        mEpisodeView.setOnEpisodeSelectListener((i, t) -> {
+            mCurrentEpisodeIndex = i;
             if (mOnSelectClickListener != null) mOnSelectClickListener.onClick(null);
         });
 
-        mTitleView.setOnPipClickListener(v -> {
-            if (mOnWindowClickListener != null) mOnWindowClickListener.onClick(v);
-        });
-
-        mTitleView.setOnScreenClickListener(v -> {
-            if (mOnScreenClickListener != null) mOnScreenClickListener.onClick(v);
-        });
-
+        // ── 标题栏 ──
+        mTitleView.setOnPipClickListener(v -> { if (mOnWindowClickListener != null) mOnWindowClickListener.onClick(v); });
+        mTitleView.setOnScreenClickListener(v -> { if (mOnScreenClickListener != null) mOnScreenClickListener.onClick(v); });
         mTitleView.setOnSettingsClickListener(v -> mSettingsView.show());
 
-        mSettingsView.setOnScaleChangeListener((scaleType, scaleText) -> {
-            setScreenScaleType(scaleType);
-            mScreenScaleType = scaleType;
-            mSettings.setScreenScale(scaleType);
-        });
+        // ── 设置面板 ──
+        mSettingsView.setOnScaleChangeListener((t, tx) -> { setScreenScaleType(t); mScreenScaleType = t; mSettings.setScreenScale(t); });
+        mSettingsView.setOnMuteChangeListener(m -> { setMute(m); mSettings.setMute(m); });
+        mSettingsView.setOnHideProgressChangeListener(h -> { mHideProgress = h; mBottomView.setShowBottomProgress(!h); mSettings.setHideProgress(h); });
+        mSettingsView.setOnAutoRotateChangeListener(a -> { mAutoRotate = a; mSettings.setAutoRotate(a); if (a) checkVideoOrientation(); });
+        mSettingsView.setOnBufferedProgressChangeListener(e -> { mShowBufferedProgress = e; mSettings.setBufferedProgressEnabled(e); if (!e) mBottomView.clearBufferedProgress(); });
+        mSettingsView.setOnTimingOptionSelectedListener(this::applyTiming);
+        mSettingsView.setOnLongPressSpeedChangeListener(s -> { mLongPressSpeed = s; mLongPressSpeedText = String.format(Locale.US, "%.1fX", s); mSettings.setLongPressSpeed(s); });
+        mSettingsView.setOnSkipStartChangeListener((p, t) -> { mSettings.setSkipStartProgress(p); if (getCurrentPosition() < p * 1000L) seekTo(p * 1000L); });
+        mSettingsView.setOnSkipEndChangeListener((p, t) -> mSettings.setSkipEndProgress(p));
 
-        mSettingsView.setOnMuteChangeListener(isMute -> {
-            setMute(isMute);
-            mSettings.setMute(isMute);
-        });
-
-        mSettingsView.setOnHideProgressChangeListener(isHide -> {
-            mHideProgress = isHide;
-            mBottomView.setShowBottomProgress(!isHide);
-            mSettings.setHideProgress(isHide);
-        });
-
-        mSettingsView.setOnAutoRotateChangeListener(isAutoRotate -> {
-            mAutoRotate = isAutoRotate;
-            mSettings.setAutoRotate(isAutoRotate);
-            if (isAutoRotate) {
-                checkVideoOrientation();
-            }
-        });
-
-        mSettingsView.setOnTimingOptionSelectedListener(option -> {
-            applyTiming(option);
-        });
-
-        mSettingsView.setOnLongPressSpeedChangeListener(speed -> {
-            mLongPressSpeed = speed;
-            mLongPressSpeedText = String.format(Locale.US, "%.1fX", speed);
-            mSettings.setLongPressSpeed(speed);
-        });
-
-        mSettingsView.setOnSkipStartChangeListener((progress, timeText) -> {
-            mSettings.setSkipStartProgress(progress);
-            if (getCurrentPosition() < progress * 1000L) {
-                seekTo(progress * 1000L);
-            }
-        });
-
-        mSettingsView.setOnSkipEndChangeListener((progress, timeText) -> {
-            mSettings.setSkipEndProgress(progress);
-        });
-
-        mController.setOnSpeedListener(() -> {
-            setSpeed(mLongPressSpeed);
-            mController.setSpeedLayoutVisibility(android.view.View.VISIBLE);
-            boolean same = Math.abs(mLongPressSpeed - mCurrentSpeed) < 0.01f;
-            mController.setSpeedText(same
-                    ? "已经是 " + mLongPressSpeedText + " 倍速"
-                    : mLongPressSpeedText + " 倍速中");
-        });
-
-        mController.setOnCancelSpeedListener(() -> {
-            setSpeed(mCurrentSpeed);
-            mController.setSpeedLayoutVisibility(android.view.View.GONE);
-        });
-
-        mBottomView.setOnProgressListener(() -> {
-            int skipEndProgress = mSettings.getSkipEndProgress();
-            long skipEndMs = skipEndProgress * 1000L;
-            if (skipEndMs > 0 && (getDuration() - getCurrentPosition()) <= skipEndMs) {
-                seekTo(getDuration());
-            }
-
-            mBottomView.setBufferedProgress(getBufferedPercentage());
-        });
+        // ── 长按倍速 ──
+        mController.setOnSpeedListener(() -> { setSpeed(mLongPressSpeed); mController.setSpeedLayoutVisibility(android.view.View.VISIBLE); boolean same = Math.abs(mLongPressSpeed - mCurrentSpeed) < 0.01f; mController.setSpeedText(same ? "已经是 " + mLongPressSpeedText + " 倍速" : mLongPressSpeedText + " 倍速中"); });
+        mController.setOnCancelSpeedListener(() -> { setSpeed(mCurrentSpeed); mController.setSpeedLayoutVisibility(android.view.View.GONE); });
     }
+
+    // ── 同步设置面板 UI ──
 
     private void syncSettingsView() {
         mSettingsView.setScaleType(mScreenScaleType);
@@ -288,493 +189,274 @@ public class StarVideoPlayer extends VideoView {
         mSettingsView.setLongPressSpeed(mLongPressSpeed);
         mSettingsView.setHideProgressChecked(mHideProgress);
         mSettingsView.setAutoRotateChecked(mAutoRotate);
-
-        int startProgress = mSettings.getSkipStartProgress();
-        String startText = formatSkipTime(startProgress);
-        mSettingsView.setSkipStartTime(startText, startProgress);
-
-        int endProgress = mSettings.getSkipEndProgress();
-        String endText = formatSkipTime(endProgress);
-        mSettingsView.setSkipEndTime(endText, endProgress);
+        mSettingsView.setBufferedProgressChecked(mShowBufferedProgress);
+        int ss = mSettings.getSkipStartProgress(), se = mSettings.getSkipEndProgress();
+        mSettingsView.setSkipStartTime(formatSkipTime(ss), ss);
+        mSettingsView.setSkipEndTime(formatSkipTime(se), se);
     }
 
-    @Override
-    protected void onDetachedFromWindow() {
-        super.onDetachedFromWindow();
-        cancelTimer();
+    // ═══════════════════════════════════════════
+    // 播放器状态处理
+    // ═══════════════════════════════════════════
+
+    @Override protected void onDetachedFromWindow() { super.onDetachedFromWindow(); cancelTimer(); }
+
+    private void handlePlayerState(int ps) {
+        if (ps == PLAYER_FULL_SCREEN || ps == PLAYER_NORMAL) { if (mAutoRotate) checkVideoOrientation(); }
     }
 
-    private void handlePlayerState(int playerState) {
-        if (playerState == PLAYER_FULL_SCREEN || playerState == PLAYER_NORMAL) {
-            if (mAutoRotate) {
-                checkVideoOrientation();
-            }
-        }
-    }
-
-    private void handlePlayState(int playState) {
-        if (playState == STATE_PREPARING) {
-            int startProgress = mSettings.getSkipStartProgress();
-            if (startProgress > 0) {
-                seekTo(startProgress * 1000L);
-            }
-        } else if (playState == STATE_PREPARED) {
-            if (mAutoRotate) {
-                checkVideoOrientation();
-            }
-        } else if (playState == STATE_PLAYBACK_COMPLETED) {
-            if (TIMING_AFTER_CURRENT.equals(mTimingText)) {
-                Activity activity = getActivity();
-                if (activity != null) {
-                    activity.finish();
-                }
-            }
-            if (mSettings.isAutoNext() && mOnDownSetClickListener != null) {
-                mOnDownSetClickListener.onClick(null);
-            }
+    private void handlePlayState(int ps) {
+        if (ps == STATE_PREPARING) {
+            int ss = mSettings.getSkipStartProgress();
+            if (ss > 0) seekTo(ss * 1000L);
+        } else if (ps == STATE_PREPARED) {
+            if (mAutoRotate) checkVideoOrientation();
+        } else if (ps == STATE_PLAYBACK_COMPLETED) {
+            if (TIMING_AFTER_CURRENT.equals(mTimingText)) { Activity a = getActivity(); if (a != null) a.finish(); }
+            if (mSettings.isAutoNext() && mOnDownSetClickListener != null) mOnDownSetClickListener.onClick(null);
         }
     }
 
     private void checkVideoOrientation() {
-        Activity activity = getActivity();
-        if (activity == null || !mAutoRotate) return;
-
-        int videoWidth = getVideoSize()[0];
-        int videoHeight = getVideoSize()[1];
-
-        if (videoWidth <= 0 || videoHeight <= 0) return;
-
-        if (videoWidth > videoHeight) {
-            activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
-        } else {
-            activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
-        }
+        Activity a = getActivity();
+        if (a == null || !mAutoRotate) return;
+        int vw = getVideoSize()[0], vh = getVideoSize()[1];
+        if (vw <= 0 || vh <= 0) return;
+        a.setRequestedOrientation(vw > vh ? ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
     }
 
-    @Override
-    public void setUrl(String url) {
-        super.setUrl(url);
-        mCurrentUrl = url;
-    }
+    // ═══════════════════════════════════════════
+    // 生命周期
+    // ═══════════════════════════════════════════
 
-    @Override
-    public void start() {
-        super.start();
-    }
+    @Override public void setUrl(String url) { super.setUrl(url); mCurrentUrl = url; }
+    @Override public void start() { super.start(); }
+    public void addDefaultControlComponent(String title, boolean isLive) { mTitleView.setTitle(title); }
+
+    // ═══════════════════════════════════════════
+    // 定时关闭
+    // ═══════════════════════════════════════════
 
     private void applyTiming(String option) {
         cancelTimer();
         mTimingText = option;
         mSettingsView.setTimingText(option);
-
-        long millis = 0;
-        if (TIMING_30_MIN.equals(option)) millis = 30 * 60_000L;
-        else if (TIMING_60_MIN.equals(option)) millis = 60 * 60_000L;
-
-        if (millis > 0) {
-            mCountDownTimer = new CountDownTimer(millis, 1_000) {
-                @Override
-                public void onTick(long ms) {
-                }
-
-                @Override
-                public void onFinish() {
-                    Activity activity = getActivity();
-                    if (activity != null) {
-                        activity.finish();
-                    }
-                }
+        long ms = 0;
+        if (TIMING_30_MIN.equals(option)) ms = 30 * 60_000L;
+        else if (TIMING_60_MIN.equals(option)) ms = 60 * 60_000L;
+        if (ms > 0) {
+            mCountDownTimer = new CountDownTimer(ms, 1_000) {
+                @Override public void onTick(long l) {}
+                @Override public void onFinish() { Activity a = getActivity(); if (a != null) a.finish(); }
             }.start();
         }
     }
 
-    private void cancelTimer() {
-        if (mCountDownTimer != null) {
-            mCountDownTimer.cancel();
-            mCountDownTimer = null;
+    private void cancelTimer() { if (mCountDownTimer != null) { mCountDownTimer.cancel(); mCountDownTimer = null; } }
+
+    // ═══════════════════════════════════════════
+    // 播放控制 SET/GET
+    // ═══════════════════════════════════════════
+
+    public void setPlaybackSpeed(float s) { mCurrentSpeed = s; mCurrentSpeedText = String.format(Locale.US, "%.1fX", s); setSpeed(s); mBottomView.setCurrentSpeed(s); }
+    public float getPlaybackSpeed() { return mCurrentSpeed; }
+
+    public void setLongPressSpeed(float s) { mLongPressSpeed = s; mLongPressSpeedText = String.format(Locale.US, "%.1fX", s); mSettingsView.setLongPressSpeed(s); mSettings.setLongPressSpeed(s); }
+    public float getLongPressSpeed() { return mLongPressSpeed; }
+
+    public void setMuted(boolean m) { setMute(m); mSettingsView.setMuteChecked(m); mSettings.setMute(m); }
+    public boolean isMuted() { return isMute(); }
+
+    public void setScreenScale(int t) { mScreenScaleType = t; setScreenScaleType(t); mSettingsView.setScaleType(t); mSettings.setScreenScale(t); }
+    public int getScreenScale() { return mScreenScaleType; }
+
+    public void setHideProgress(boolean h) { mHideProgress = h; mBottomView.setShowBottomProgress(!h); mSettingsView.setHideProgressChecked(h); mSettings.setHideProgress(h); }
+    public boolean isHideProgress() { return mHideProgress; }
+
+    public void setAutoRotate(boolean a) { mAutoRotate = a; mSettingsView.setAutoRotateChecked(a); mSettings.setAutoRotate(a); if (a) checkVideoOrientation(); }
+    public boolean isAutoRotate() { return mAutoRotate; }
+
+    public void setSkipStartTime(int s) { if (s < 0) s = 0; mSettingsView.setSkipStartTime(formatSkipTime(s), s); mSettings.setSkipStartProgress(s); }
+    public int getSkipStartTime() { return mSettings.getSkipStartProgress(); }
+
+    public void setSkipEndTime(int s) { if (s < 0) s = 0; mSettingsView.setSkipEndTime(formatSkipTime(s), s); mSettings.setSkipEndProgress(s); }
+    public int getSkipEndTime() { return mSettings.getSkipEndProgress(); }
+
+    public void setTimingOption(String o) { applyTiming(o); }
+    public String getTimingOption() { return mTimingText; }
+
+    public void setAutoNext(boolean a) { mSettings.setAutoNext(a); }
+    public boolean isAutoNext() { return mSettings.isAutoNext(); }
+
+    // ═══════════════════════════════════════════
+    // 选集
+    // ═══════════════════════════════════════════
+
+    public void setEpisodes(java.util.List<String> e, int i) { mEpisodeView.setEpisodes(e, i); mCurrentEpisodeIndex = i; }
+    public void setEpisodeAdapter(androidx.recyclerview.widget.RecyclerView.Adapter<?> a) { mEpisodeView.setAdapter(a); }
+    public androidx.recyclerview.widget.RecyclerView.Adapter<?> getEpisodeAdapter() { return mEpisodeView.getAdapter(); }
+    public androidx.recyclerview.widget.RecyclerView getEpisodeRecyclerView() { return mEpisodeView.getRecyclerView(); }
+    public int getCurrentEpisodeIndex() { return mCurrentEpisodeIndex; }
+    public void setCurrentEpisodeIndex(int i) { mCurrentEpisodeIndex = i; mEpisodeView.setCurrentIndex(i); }
+    public void setOnEpisodeSelectListener(StarEpisodeView.OnEpisodeSelectListener l) { mEpisodeView.setOnEpisodeSelectListener(l); }
+
+    public void showEpisodePanel() { mEpisodeView.show(); }
+    public void hideEpisodePanel() { mEpisodeView.hide(); }
+    public boolean isEpisodePanelShowing() { return mEpisodeView.isEpisodeShowing(); }
+    public void setEpisodePanelTitle(String t) { mEpisodeView.setPanelTitle(t); }
+    public void setEpisodePanelTitleColor(int c) { mEpisodeView.setPanelTitleColor(c); }
+    public void setEpisodePanelTitleBarVisibility(int v) { mEpisodeView.setTitleBarVisibility(v); }
+    public void setEpisodePanelCloseButtonVisibility(int v) { mEpisodeView.setCloseButtonVisibility(v); }
+    public void setEpisodeCustomContentView(android.view.View v) { mEpisodeView.setCustomContentView(v); }
+    public void setEpisodeCustomContentView(int l) { mEpisodeView.setCustomContentView(l); }
+    public void restoreEpisodeDefaultContent() { mEpisodeView.restoreDefaultContent(); }
+    public android.widget.FrameLayout getEpisodeContentContainer() { return mEpisodeView.getContentContainer(); }
+
+    // ═══════════════════════════════════════════
+    // 设置面板
+    // ═══════════════════════════════════════════
+
+    public void showSettingsPanel() { mSettingsView.show(); }
+    public void hideSettingsPanel() { mSettingsView.hide(); }
+    public boolean isSettingsPanelShowing() { return mSettingsView.isSettingsShowing(); }
+
+    // ═══════════════════════════════════════════
+    // 按钮可见性 — 统一入口
+    // ═══════════════════════════════════════════
+
+    /**
+     * 设置按钮可见性（全局）。
+     * <pre>{@code
+     * player.setButtonVisible(PlayerButton.SELECT, View.GONE);
+     * player.setButtonVisible(PlayerButton.SPEED, View.VISIBLE);
+     * }</pre>
+     */
+    public void setButtonVisible(PlayerButton btn, int visibility) {
+        setButtonVisible(btn, visibility, visibility);
+    }
+
+    /**
+     * 设置按钮可见性（区分非全屏 / 全屏）。
+     * <pre>{@code
+     * player.setButtonVisible(PlayerButton.SPEED, View.GONE, View.VISIBLE); // normal=gone, fullscreen=visible
+     * }</pre>
+     */
+    public void setButtonVisible(PlayerButton btn, int normalVis, int fullscreenVis) {
+        switch (btn) {
+            // ── 底部 ──
+            case SELECT:              mBottomView.setSelectButtonVisibilityNormal(normalVis);         mBottomView.setSelectButtonVisibilityFullscreen(fullscreenVis);         break;
+            case SPEED:               mBottomView.setSpeedButtonVisibilityNormal(normalVis);           mBottomView.setSpeedButtonVisibilityFullscreen(fullscreenVis);           break;
+            case PREV:                mBottomView.setPreviousButtonVisibilityNormal(normalVis);        mBottomView.setPreviousButtonVisibilityFullscreen(fullscreenVis);        break;
+            case NEXT:                mBottomView.setNextButtonVisibilityNormal(normalVis);            mBottomView.setNextButtonVisibilityFullscreen(fullscreenVis);            break;
+            case FULLSCREEN:          mBottomView.setFullscreenButtonVisibilityNormal(normalVis);      mBottomView.setFullscreenButtonVisibilityFullscreen(fullscreenVis);      break;
+            case PORTRAIT_FULLSCREEN: mBottomView.setFullscreenPortraitButtonVisibilityNormal(normalVis);mBottomView.setFullscreenPortraitButtonVisibilityFullscreen(fullscreenVis);break;
+            // ── 顶部 ──
+            case BACK:      mTitleView.setBackButtonVisibility(normalVis);       break;
+            case PIP:       mTitleView.setPipButtonVisibility(normalVis);        break;
+            case CAST:      mTitleView.setScreenButtonVisibility(normalVis);     break;
+            case SETTINGS:  mTitleView.setSettingsButtonVisibility(normalVis);   break;
+            case SYS_TIME:  mTitleView.setSysTimeVisibility(normalVis);          break;
         }
     }
 
-    public void setEpisodes(java.util.List<String> episodes, int currentIndex) {
-        mEpisodeView.setEpisodes(episodes, currentIndex);
-        mCurrentEpisodeIndex = currentIndex;
-    }
-
-    public void setEpisodeAdapter(androidx.recyclerview.widget.RecyclerView.Adapter<?> adapter) {
-        mEpisodeView.setAdapter(adapter);
-    }
-
-    public androidx.recyclerview.widget.RecyclerView.Adapter<?> getEpisodeAdapter() {
-        return mEpisodeView.getAdapter();
-    }
-
-    public androidx.recyclerview.widget.RecyclerView getEpisodeRecyclerView() {
-        return mEpisodeView.getRecyclerView();
-    }
-
-    public void showEpisodePanel() {
-        mEpisodeView.show();
-    }
-
-    public void hideEpisodePanel() {
-        mEpisodeView.hide();
-    }
-
-    public boolean isEpisodePanelShowing() {
-        return mEpisodeView.isEpisodeShowing();
-    }
-
-    public void setEpisodePanelTitle(String title) {
-        mEpisodeView.setPanelTitle(title);
-    }
-
-    public void setEpisodePanelTitleColor(int color) {
-        mEpisodeView.setPanelTitleColor(color);
-    }
-
-    public void setEpisodePanelTitleBarVisibility(int visibility) {
-        mEpisodeView.setTitleBarVisibility(visibility);
-    }
-
-    public void setEpisodePanelCloseButtonVisibility(int visibility) {
-        mEpisodeView.setCloseButtonVisibility(visibility);
-    }
-
-    public void setEpisodeCustomContentView(android.view.View view) {
-        mEpisodeView.setCustomContentView(view);
-    }
-
-    public void setEpisodeCustomContentView(int layoutResId) {
-        mEpisodeView.setCustomContentView(layoutResId);
-    }
-
-    public void restoreEpisodeDefaultContent() {
-        mEpisodeView.restoreDefaultContent();
-    }
-
-    public android.widget.FrameLayout getEpisodeContentContainer() {
-        return mEpisodeView.getContentContainer();
-    }
-
-    public void showSettingsPanel() {
-        mSettingsView.show();
-    }
-
-    public void hideSettingsPanel() {
-        mSettingsView.hide();
-    }
-
-    public boolean isSettingsPanelShowing() {
-        return mSettingsView.isSettingsShowing();
-    }
-
-    public void setPlaybackSpeed(float speed) {
-        mCurrentSpeed = speed;
-        mCurrentSpeedText = String.format(Locale.US, "%.1fX", speed);
-        setSpeed(speed);
-        mBottomView.setCurrentSpeed(speed);
-    }
-
-    public float getPlaybackSpeed() {
-        return mCurrentSpeed;
-    }
-
-    public void setLongPressSpeed(float speed) {
-        mLongPressSpeed = speed;
-        mLongPressSpeedText = String.format(Locale.US, "%.1fX", speed);
-        mSettingsView.setLongPressSpeed(speed);
-        mSettings.setLongPressSpeed(speed);
-    }
-
-    public float getLongPressSpeed() {
-        return mLongPressSpeed;
-    }
-
-    public void setMuted(boolean mute) {
-        setMute(mute);
-        mSettingsView.setMuteChecked(mute);
-        mSettings.setMute(mute);
-    }
-
-    public boolean isMuted() {
-        return isMute();
-    }
-
-    public void setScreenScale(int scaleType) {
-        mScreenScaleType = scaleType;
-        setScreenScaleType(scaleType);
-        mSettingsView.setScaleType(scaleType);
-        mSettings.setScreenScale(scaleType);
-    }
-
-    public int getScreenScale() {
-        return mScreenScaleType;
-    }
-
-    public void setHideProgress(boolean hide) {
-        mHideProgress = hide;
-        mBottomView.setShowBottomProgress(!hide);
-        mSettingsView.setHideProgressChecked(hide);
-        mSettings.setHideProgress(hide);
-    }
-
-    public boolean isHideProgress() {
-        return mHideProgress;
-    }
-
-    public void setAutoRotate(boolean autoRotate) {
-        mAutoRotate = autoRotate;
-        mSettingsView.setAutoRotateChecked(autoRotate);
-        mSettings.setAutoRotate(autoRotate);
-        if (autoRotate) {
-            checkVideoOrientation();
-        }
-    }
-
-    public boolean isAutoRotate() {
-        return mAutoRotate;
-    }
-
-    public void setSkipStartTime(int seconds) {
-        if (seconds < 0) seconds = 0;
-        String timeText = formatSkipTime(seconds);
-        mSettingsView.setSkipStartTime(timeText, seconds);
-        mSettings.setSkipStartProgress(seconds);
-    }
-
-    public int getSkipStartTime() {
-        return mSettings.getSkipStartProgress();
-    }
-
-    public void setSkipEndTime(int seconds) {
-        if (seconds < 0) seconds = 0;
-        String timeText = formatSkipTime(seconds);
-        mSettingsView.setSkipEndTime(timeText, seconds);
-        mSettings.setSkipEndProgress(seconds);
-    }
-
-    public int getSkipEndTime() {
-        return mSettings.getSkipEndProgress();
-    }
-
-    public void setTimingOption(String option) {
-        applyTiming(option);
-    }
-
-    public String getTimingOption() {
-        return mTimingText;
-    }
-
-    public void setAutoNext(boolean autoNext) {
-        mSettings.setAutoNext(autoNext);
-    }
-
-    public boolean isAutoNext() {
-        return mSettings.isAutoNext();
-    }
-
-    public void setVisibilityBottom(int selectVisibility, int speedVisibility, 
-                                    int previousVisibility, int nextVisibility) {
-        mBottomView.setBottomButtonsVisibility(selectVisibility, speedVisibility, 
-                                               previousVisibility, nextVisibility);
-    }
-
-    public void setVisibilityBottom(int selectVisibility, int speedVisibility, 
-                                    int previousVisibility, int nextVisibility,
-                                    int fullscreenVisibility, int fullscreenPortraitVisibility) {
-        mBottomView.setBottomButtonsVisibility(selectVisibility, speedVisibility, 
-                                               previousVisibility, nextVisibility,
-                                               fullscreenVisibility, fullscreenPortraitVisibility);
-    }
-
-    public void setVisibilityBottomNormal(int selectVisibility, int speedVisibility, 
-                                          int previousVisibility, int nextVisibility) {
-        mBottomView.setBottomButtonsVisibilityNormal(selectVisibility, speedVisibility, 
-                                                     previousVisibility, nextVisibility);
-    }
-
-    public void setVisibilityBottomNormal(int selectVisibility, int speedVisibility, 
-                                          int previousVisibility, int nextVisibility,
-                                          int fullscreenVisibility, int fullscreenPortraitVisibility) {
-        mBottomView.setBottomButtonsVisibilityNormal(selectVisibility, speedVisibility, 
-                                                     previousVisibility, nextVisibility,
-                                                     fullscreenVisibility, fullscreenPortraitVisibility);
-    }
-
-    public void setVisibilityBottomFullscreen(int selectVisibility, int speedVisibility, 
-                                              int previousVisibility, int nextVisibility) {
-        mBottomView.setBottomButtonsVisibilityFullscreen(selectVisibility, speedVisibility, 
-                                                         previousVisibility, nextVisibility);
-    }
-
-    public void setVisibilityBottomFullscreen(int selectVisibility, int speedVisibility, 
-                                              int previousVisibility, int nextVisibility,
-                                              int fullscreenVisibility, int fullscreenPortraitVisibility) {
-        mBottomView.setBottomButtonsVisibilityFullscreen(selectVisibility, speedVisibility, 
-                                                         previousVisibility, nextVisibility,
-                                                         fullscreenVisibility, fullscreenPortraitVisibility);
-    }
-
-    public void setVisibilityBottomAll(int selectNormal, int speedNormal, int previousNormal, int nextNormal,
-                                       int fullscreenNormal, int fullscreenPortraitNormal,
-                                       int selectFullscreen, int speedFullscreen, int previousFullscreen, int nextFullscreen,
-                                       int fullscreenFullscreen, int fullscreenPortraitFullscreen) {
-        mBottomView.setBottomButtonsVisibilityAll(selectNormal, speedNormal, previousNormal, nextNormal,
-                                                  fullscreenNormal, fullscreenPortraitNormal,
-                                                  selectFullscreen, speedFullscreen, previousFullscreen, nextFullscreen,
-                                                  fullscreenFullscreen, fullscreenPortraitFullscreen);
-    }
-
-    public void setSelectButtonVisibility(int visibility) {
-        mBottomView.setSelectButtonVisibility(visibility);
-    }
-
-    public void setSelectButtonVisibilityNormal(int visibility) {
-        mBottomView.setSelectButtonVisibilityNormal(visibility);
-    }
-
-    public void setSelectButtonVisibilityFullscreen(int visibility) {
-        mBottomView.setSelectButtonVisibilityFullscreen(visibility);
-    }
-
-    public void setSpeedButtonVisibility(int visibility) {
-        mBottomView.setSpeedButtonVisibility(visibility);
-    }
-
-    public void setSpeedButtonVisibilityNormal(int visibility) {
-        mBottomView.setSpeedButtonVisibilityNormal(visibility);
-    }
-
-    public void setSpeedButtonVisibilityFullscreen(int visibility) {
-        mBottomView.setSpeedButtonVisibilityFullscreen(visibility);
-    }
-
-    public void setPreviousButtonVisibility(int visibility) {
-        mBottomView.setPreviousButtonVisibility(visibility);
-    }
-
-    public void setPreviousButtonVisibilityNormal(int visibility) {
-        mBottomView.setPreviousButtonVisibilityNormal(visibility);
-    }
-
-    public void setPreviousButtonVisibilityFullscreen(int visibility) {
-        mBottomView.setPreviousButtonVisibilityFullscreen(visibility);
-    }
-
-    public void setNextButtonVisibility(int visibility) {
-        mBottomView.setNextButtonVisibility(visibility);
-    }
-
-    public void setNextButtonVisibilityNormal(int visibility) {
-        mBottomView.setNextButtonVisibilityNormal(visibility);
-    }
-
-    public void setNextButtonVisibilityFullscreen(int visibility) {
-        mBottomView.setNextButtonVisibilityFullscreen(visibility);
-    }
-
-    public void setFullscreenButtonVisibility(int visibility) {
-        mBottomView.setFullscreenButtonVisibility(visibility);
-    }
-
-    public void setFullscreenButtonVisibilityNormal(int visibility) {
-        mBottomView.setFullscreenButtonVisibilityNormal(visibility);
-    }
-
-    public void setFullscreenButtonVisibilityFullscreen(int visibility) {
-        mBottomView.setFullscreenButtonVisibilityFullscreen(visibility);
-    }
-
-    public void setFullscreenPortraitButtonVisibility(int visibility) {
-        mBottomView.setFullscreenPortraitButtonVisibility(visibility);
-    }
-
-    public void setFullscreenPortraitButtonVisibilityNormal(int visibility) {
-        mBottomView.setFullscreenPortraitButtonVisibilityNormal(visibility);
-    }
-
-    public void setFullscreenPortraitButtonVisibilityFullscreen(int visibility) {
-        mBottomView.setFullscreenPortraitButtonVisibilityFullscreen(visibility);
-    }
-
-    public void setOnFullscreenPortraitClickListener(StarBottomView.OnFullscreenPortraitClickListener listener) {
-        mBottomView.setOnFullscreenPortraitClickListener(listener);
-    }
-
-    public void setTitleButtonsVisibility(int backVisibility, int pipVisibility, 
-                                          int screenVisibility, int settingsVisibility) {
-        mTitleView.setTitleButtonsVisibility(backVisibility, pipVisibility, 
-                                             screenVisibility, settingsVisibility);
-    }
-
-    public void setBackButtonVisibility(int visibility) {
-        mTitleView.setBackButtonVisibility(visibility);
-    }
-
-    public void setPipButtonVisibility(int visibility) {
-        mTitleView.setPipButtonVisibility(visibility);
-    }
-
-    public void setScreenButtonVisibility(int visibility) {
-        mTitleView.setScreenButtonVisibility(visibility);
-    }
-
-    public void setSettingsButtonVisibility(int visibility) {
-        mTitleView.setSettingsButtonVisibility(visibility);
-    }
-
-    public void setSysTimeVisibility(int visibility) {
-        mTitleView.setSysTimeVisibility(visibility);
-    }
-
-    public void setTitleTextColor(int color) {
-        mTitleView.setTitleTextColor(color);
-    }
-
-    public void setSysTimeTextColor(int color) {
-        mTitleView.setSysTimeTextColor(color);
-    }
-
-    public void setTitleContainerBackground(int color) {
-        mTitleView.setTitleContainerBackground(color);
-    }
-
-    public void setButtonIconTint(int color) {
-        mTitleView.setButtonIconTint(color);
-    }
-
-    public void setTimeTextColor(int color) {
-        mBottomView.setTimeTextColor(color);
-    }
-
-    public void setBottomContainerBackground(int color) {
-        mBottomView.setBottomContainerBackground(color);
-    }
-
-    public void setBottomButtonIconTint(int color) {
-        mBottomView.setButtonIconTint(color);
-    }
-
-    public int getCurrentEpisodeIndex() {
-        return mCurrentEpisodeIndex;
-    }
-
-    public void setCurrentEpisodeIndex(int index) {
-        mCurrentEpisodeIndex = index;
-        mEpisodeView.setCurrentIndex(index);
-    }
-
-    public void addDefaultControlComponent(String title, boolean isLive) {
-        mTitleView.setTitle(title);
-    }
-
-    public void setOnEpisodeSelectListener(StarEpisodeView.OnEpisodeSelectListener listener) {
-        mEpisodeView.setOnEpisodeSelectListener(listener);
-    }
+    public void bottomBar(BottomBarConfig.Block<BottomBarConfig> b) {
+        BottomBarConfig c = new BottomBarConfig();
+        b.configure(c);
+        mBottomView.applyConfig(c);
+    }
+
+    // ── 底部按钮（旧 API，保留兼容）──
+    public void setVisibilityBottom(int sel, int spd, int prev, int next) { mBottomView.setBottomButtonsVisibility(sel, spd, prev, next); }
+    public void setVisibilityBottom(int sel, int spd, int prev, int next, int full, int pf) { mBottomView.setBottomButtonsVisibility(sel, spd, prev, next, full, pf); }
+    public void setVisibilityBottomNormal(int sel, int spd, int prev, int next) { mBottomView.setBottomButtonsVisibilityNormal(sel, spd, prev, next); }
+    public void setVisibilityBottomNormal(int sel, int spd, int prev, int next, int full, int pf) { mBottomView.setBottomButtonsVisibilityNormal(sel, spd, prev, next, full, pf); }
+    public void setVisibilityBottomFullscreen(int sel, int spd, int prev, int next) { mBottomView.setBottomButtonsVisibilityFullscreen(sel, spd, prev, next); }
+    public void setVisibilityBottomFullscreen(int sel, int spd, int prev, int next, int full, int pf) { mBottomView.setBottomButtonsVisibilityFullscreen(sel, spd, prev, next, full, pf); }
+    public void setVisibilityBottomAll(int sn, int spn, int pn, int nn, int fn, int pfn, int sf, int spf, int pf, int nf, int ff, int pff) { mBottomView.setBottomButtonsVisibilityAll(sn, spn, pn, nn, fn, pfn, sf, spf, pf, nf, ff, pff); }
+
+    // ── 单按钮：选集 ──
+    public void setSelectButtonVisibility(int v) { mBottomView.setSelectButtonVisibility(v); }
+    public void setSelectButtonVisibilityNormal(int v) { mBottomView.setSelectButtonVisibilityNormal(v); }
+    public void setSelectButtonVisibilityFullscreen(int v) { mBottomView.setSelectButtonVisibilityFullscreen(v); }
+
+    // ── 单按钮：倍速 ──
+    public void setSpeedButtonVisibility(int v) { mBottomView.setSpeedButtonVisibility(v); }
+    public void setSpeedButtonVisibilityNormal(int v) { mBottomView.setSpeedButtonVisibilityNormal(v); }
+    public void setSpeedButtonVisibilityFullscreen(int v) { mBottomView.setSpeedButtonVisibilityFullscreen(v); }
+
+    // ── 单按钮：上一集 ──
+    public void setPreviousButtonVisibility(int v) { mBottomView.setPreviousButtonVisibility(v); }
+    public void setPreviousButtonVisibilityNormal(int v) { mBottomView.setPreviousButtonVisibilityNormal(v); }
+    public void setPreviousButtonVisibilityFullscreen(int v) { mBottomView.setPreviousButtonVisibilityFullscreen(v); }
+
+    // ── 单按钮：下一集 ──
+    public void setNextButtonVisibility(int v) { mBottomView.setNextButtonVisibility(v); }
+    public void setNextButtonVisibilityNormal(int v) { mBottomView.setNextButtonVisibilityNormal(v); }
+    public void setNextButtonVisibilityFullscreen(int v) { mBottomView.setNextButtonVisibilityFullscreen(v); }
+
+    // ── 单按钮：全屏 ──
+    public void setFullscreenButtonVisibility(int v) { mBottomView.setFullscreenButtonVisibility(v); }
+    public void setFullscreenButtonVisibilityNormal(int v) { mBottomView.setFullscreenButtonVisibilityNormal(v); }
+    public void setFullscreenButtonVisibilityFullscreen(int v) { mBottomView.setFullscreenButtonVisibilityFullscreen(v); }
+
+    // ── 单按钮：竖屏全屏 ──
+    public void setFullscreenPortraitButtonVisibility(int v) { mBottomView.setFullscreenPortraitButtonVisibility(v); }
+    public void setFullscreenPortraitButtonVisibilityNormal(int v) { mBottomView.setFullscreenPortraitButtonVisibilityNormal(v); }
+    public void setFullscreenPortraitButtonVisibilityFullscreen(int v) { mBottomView.setFullscreenPortraitButtonVisibilityFullscreen(v); }
+
+    // ── 竖屏全屏点击 ──
+    public void setOnFullscreenPortraitClickListener(StarBottomView.OnFullscreenPortraitClickListener l) { mBottomView.setOnFullscreenPortraitClickListener(l); }
+
+    // ═══════════════════════════════════════════
+    // 顶部按钮可见性
+    // ═══════════════════════════════════════════
+
+    public void setTitleButtonsVisibility(int back, int pip, int screen, int settings) { mTitleView.setTitleButtonsVisibility(back, pip, screen, settings); }
+    public void setBackButtonVisibility(int v)    { mTitleView.setBackButtonVisibility(v); }
+    public void setPipButtonVisibility(int v)     { mTitleView.setPipButtonVisibility(v); }
+    public void setScreenButtonVisibility(int v)  { mTitleView.setScreenButtonVisibility(v); }
+    public void setSettingsButtonVisibility(int v){ mTitleView.setSettingsButtonVisibility(v); }
+    public void setSysTimeVisibility(int v)       { mTitleView.setSysTimeVisibility(v); }
+
+    // ═══════════════════════════════════════════
+    // 颜色
+    // ═══════════════════════════════════════════
+
+    /**
+     * 一键设色。
+     * <pre>{@code
+     * player.setColor(PlayerColor.TITLE_ICON, Color.WHITE);   // 标题栏所有按钮图标
+     * player.setColor(PlayerColor.BOTTOM_ICON, Color.WHITE);  // 底部栏所有按钮图标
+     * }</pre>
+     */
+    public void setColor(PlayerColor item, int color) {
+        if (item == PlayerColor.TITLE_ICON)  mTitleView.setButtonIconTint(color);
+        if (item == PlayerColor.BOTTOM_ICON) mBottomView.setButtonIconTint(color);
+    }
+
+    // ── 旧 API（保留兼容）──
+    public void setTitleTextColor(int c)          { mTitleView.setTitleTextColor(c); }
+    public void setSysTimeTextColor(int c)        { mTitleView.setSysTimeTextColor(c); }
+    public void setButtonIconTint(int c)           { setColor(PlayerColor.TITLE_ICON, c); }
+    public void setTitleContainerBackground(int c) { mTitleView.setTitleContainerBackground(c); }
+    public void setTimeTextColor(int c)            { mBottomView.setTimeTextColor(c); }
+    public void setBottomButtonIconTint(int c)     { setColor(PlayerColor.BOTTOM_ICON, c); }
+    public void setBottomContainerBackground(int c){ mBottomView.setBottomContainerBackground(c); }
+
+    // ═══════════════════════════════════════════
+    // 监听设置
+    // ═══════════════════════════════════════════
+
+    public void setOnWindowClickListener(OnWindowClickListener l)   { mOnWindowClickListener = l; }
+    public void setOnScreenClickListener(OnScreenClickListener l)   { mOnScreenClickListener = l; }
+    public void setOnSelectClickListener(OnSelectClickListener l)   { mOnSelectClickListener = l; }
+    public void setOnUpSetClickListener(OnUpSetClickListener l)     { mOnUpSetClickListener = l; }
+    public void setOnDownSetClickListener(OnDownSetClickListener l) { mOnDownSetClickListener = l; }
+
+    // ── 工具 ──
 
     private String formatSkipTime(int seconds) {
-        int min = seconds / 60;
-        int sec = seconds % 60;
+        int min = seconds / 60, sec = seconds % 60;
         return String.format(Locale.US, "%02d:%02d", min, sec);
     }
 }

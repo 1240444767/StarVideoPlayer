@@ -21,6 +21,7 @@ public class StarPlayerSettings {
     static final String KEY_HIDE_PROGRESS = "hide_progress";
     static final String KEY_AUTO_ROTATE = "auto_rotate";
     static final String KEY_SCREEN_SCALE = "screen_scale";
+    static final String KEY_BUFFERED_PROGRESS = "buffered_progress";
 
     private final SharedPreferences mPrefs;
 
@@ -114,5 +115,15 @@ public class StarPlayerSettings {
 
     public void setScreenScale(int scaleType) {
         mPrefs.edit().putInt(KEY_SCREEN_SCALE, scaleType).apply();
+    }
+
+    // ── Buffered progress ──
+
+    public boolean isBufferedProgressEnabled() {
+        return mPrefs.getBoolean(KEY_BUFFERED_PROGRESS, true); // 默认开启
+    }
+
+    public void setBufferedProgressEnabled(boolean enabled) {
+        mPrefs.edit().putBoolean(KEY_BUFFERED_PROGRESS, enabled).apply();
     }
 }

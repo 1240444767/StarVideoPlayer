@@ -2,528 +2,271 @@
 [![](https://jitpack.io/v/1240444767/StarVideoPlayer.svg)](https://jitpack.io/#1240444767/StarVideoPlayer)
 ![GitHub Repo stars](https://img.shields.io/github/stars/1240444767/StarVideoPlayer)
 
-一个功能强大的 Android 视频播放器库，专为短剧/视频应用设计，基于 DKPlayer 开发。
+专为短剧/视频应用设计的 Android 播放器，基于 DKPlayer + Media3。
 
 ## 功能特性
 
-- **播放内核** — 默认 ExoPlayer 内核，可通过 `setPlayerFactory()` 切换为 IJKPlayer 等自定义内核
-- **选集功能** — 剧集列表展示与快速切换，支持默认适配器、自定义适配器、完全自定义内容面板
-- **倍速播放** — 点击倍速按钮弹出菜单选择（0.5x ~ 3.0x）
-- **长按倍速** — 长按屏幕快速播放（默认 3 倍速，可自定义 1.0x ~ 10.0x）
-- **双击暂停/播放** — 双击屏幕切换播放/暂停状态
-- **定时关闭** — 支持「播完当前」「30 分钟」「60 分钟」
-- **跳过片头/片尾** — 自动跳过指定时间段
-- **画面比例调整** — 支持默认、16:9、4:3、填充、原始、裁剪（设置持久化，重启恢复）
-- **静音控制** — 一键静音/取消静音
-- **手势控制** — 滑动调节亮度、音量、进度
-- **全屏/小窗模式** — 支持横屏全屏和竖屏全屏两种模式
-- **投屏功能接口** — 预留投屏回调接口
-- **刘海屏适配** — 完美适配刘海屏设备
-- **锁屏功能** — 全屏模式下可锁定控制栏
-- **隐藏进度条** — 底部常驻进度条可隐藏
-- **自动旋转** — 根据视频宽高比自动切换横竖屏
-- **按钮可见性控制** — 底部/顶部各按钮独立控制，支持区分全屏/非全屏状态
-- **颜色自定义** — 标题栏和底部栏的文字颜色、图标颜色、背景颜色
-- **拖动时间指示器** — 拖动 SeekBar 时气泡跟随显示当前时间
-- **短剧播放器** — `StarShortDramaPlayer`，自动隐藏选集/上下集按钮
+- **Media3 内核** — 默认 `androidx.media3.exoplayer`，HLS 缓冲追踪精准；可切 ExoPlayer 2.x / IJKPlayer
+- **激进缓冲** — 暂停时继续下载，最大 1 小时缓冲量，SeekBar 实时显示缓冲进度
+- **选集功能** — 默认适配器 / 自定义适配器 / 完全自定义内容面板
+- **倍速播放** — 0.5x ~ 3.0x，弹出菜单选择
+- **长按倍速** — 默认 3x，1.0x ~ 10.0x 可调
+- **双击暂停/播放**
+- **定时关闭** — 播完当前 / 30 分钟 / 60 分钟
+- **跳过片头/片尾** — 自动跳过，持久化
+- **画面比例** — 默认 / 16:9 / 4:3 / 填充 / 原始 / 裁剪（持久化）
+- **静音** / **手势控制**（亮度/音量/进度）/ **锁屏**
+- **横竖全屏** — 横屏全屏 + 竖屏全屏双模式
+- **刘海屏适配** / **自动旋转**
+- **投屏接口** — 预留回调 + 内置 DLNA-Cast 模块
+- **按钮可见性** — 底部/顶部各按钮独立控制，区分全屏/非全屏
+- **颜色自定义** — 标题栏、底部栏文字/图标/背景色
+- **缓冲进度条** — SeekBar 显示缓冲范围，设置中可开关
+- **短剧播放器** — `StarShortDramaPlayer`，自动精简按钮
+- **底部栏合二为一** — 单 XML 双容器，切换无开销
 
-## 引入方式
+---
 
-### Step 1. 添加 JitPack 仓库
+## 引入
 
-在项目根目录的 `settings.gradle` 中添加：
-
-```groovy
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-        maven { url 'https://jitpack.io' }
-    }
-}
-```
-
-### Step 2. 添加依赖
+### 依赖
 
 ```groovy
 dependencies {
     implementation 'xyz.doikki.android.dkplayer:dkplayer-java:3.3.7'
-    implementation 'xyz.doikki.android.dkplayer:player-exo:3.3.7'   // ExoPlayer（默认内核，必须引入）
-    // implementation 'xyz.doikki.android.dkplayer:player-ijk:3.3.7'  // IJKPlayer（可选，切换内核时需要）
-    implementation 'com.github.1240444767:StarVideoPlayer:2.0.0'
+    // Media3 由本库自带，无需额外引入
+    implementation 'com.github.1240444767:StarVideoPlayer:2.1.0'
 }
 ```
 
-## 使用方法
-
-### 1. 权限
+### 布局
 
 ```xml
-<uses-permission android:name="android.permission.INTERNET" />
-<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-```
-
-### 2. 布局
-
-```xml
-<!-- 标准播放器（带选集功能） -->
+<!-- 标准播放器 -->
 <com.star.play.StarVideoPlayer
     android:id="@+id/player"
     android:layout_width="match_parent"
     android:layout_height="200dp" />
 
-<!-- 短剧播放器（精简版，无选集/上下集按钮） -->
+<!-- 短剧播放器（无选集/上下集按钮） -->
 <com.star.play.StarShortDramaPlayer
     android:id="@+id/player"
     android:layout_width="match_parent"
     android:layout_height="match_parent" />
 ```
 
-### 3. 基础使用
+### 权限
+
+```xml
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+```
+
+---
+
+## 快速开始
 
 ```java
-public class MainActivity extends AppCompatActivity {
-    private StarVideoPlayer videoView;
+StarVideoPlayer player = findViewById(R.id.player);
+// 默认 Media3 内核，无需手动设 PlayerFactory
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+player.setUrl("https://example.com/video.mp4");
+player.addDefaultControlComponent("视频标题", false);
+player.start();
 
-        videoView = findViewById(R.id.player);
-
-        // 默认已使用 ExoPlayer 内核，无需手动设置
-
-        // 设置视频地址和标题
-        videoView.setUrl("https://example.com/video.mp4");
-        videoView.addDefaultControlComponent("视频标题", false);
-
-        // 开始播放
-        videoView.start();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        videoView.pause();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        videoView.resume();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        videoView.release();
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (!videoView.onBackPressed()) {
-            super.onBackPressed();
-        }
-    }
+@Override protected void onPause()  { player.pause(); }
+@Override protected void onResume() { player.resume(); }
+@Override protected void onDestroy(){ player.release(); }
+@Override public void onBackPressed() {
+    if (!player.onBackPressed()) super.onBackPressed();
 }
 ```
 
-### 4. 短剧播放器 StarShortDramaPlayer
-
-`StarShortDramaPlayer` 继承自 `StarVideoPlayer`，构造函数中自动隐藏选集、上一集、下一集按钮。用法与父类完全一致。
+**切换内核：**
 
 ```java
-StarShortDramaPlayer videoView = findViewById(R.id.player);
-// 默认已使用 ExoPlayer 内核
-videoView.setUrl("https://example.com/video.m3u8");
-videoView.addDefaultControlComponent("短剧标题", false);
-videoView.start();
+// ExoPlayer 2.x
+player.setPlayerFactory(ExoMediaPlayerFactory.create());
+// IJKPlayer
+player.setPlayerFactory(IjkPlayerFactory.create());
 ```
-
-### 5. 切换播放内核
-
-默认使用 ExoPlayer。如需切换到 IJKPlayer 或其他内核，在 `start()` 之前调用：
-
-```java
-videoView.setPlayerFactory(IjkPlayerFactory.create());   // 覆盖默认的 ExoPlayer
-videoView.setUrl("https://example.com/video.mp4");
-videoView.start();
-```
-
-**注意：** 切换内核需要确保对应的依赖已引入（如 `player-ijk:3.3.7`）。
 
 ---
 
-### 6. 播放控制
+## 播放控制
 
 ```java
-// 倍速（通过底部倍速按钮弹出菜单选择，支持 0.5x ~ 3.0x）
-videoView.setPlaybackSpeed(1.5f);
-float speed = videoView.getPlaybackSpeed();
+// 倍速
+player.setPlaybackSpeed(1.5f);
+float s = player.getPlaybackSpeed();
 
-// 长按倍速（默认为 3.0x，范围 1.0x ~ 10.0x，在设置面板中调节）
-videoView.setLongPressSpeed(3.0f);
-float longPress = videoView.getLongPressSpeed();
+// 长按倍速
+player.setLongPressSpeed(3.0f);
+float l = player.getLongPressSpeed();
 
 // 静音
-videoView.setMuted(true);
-boolean isMute = videoView.isMuted();
+player.setMuted(true);
+boolean m = player.isMuted();
 
-// 画面比例（设置持久化，重启恢复）
-videoView.setScreenScale(VideoView.SCREEN_SCALE_16_9);
-videoView.setScreenScale(VideoView.SCREEN_SCALE_4_3);
-videoView.setScreenScale(VideoView.SCREEN_SCALE_DEFAULT);
-videoView.setScreenScale(VideoView.SCREEN_SCALE_MATCH_PARENT);
-videoView.setScreenScale(VideoView.SCREEN_SCALE_ORIGINAL);
-videoView.setScreenScale(VideoView.SCREEN_SCALE_CENTER_CROP);
-int scale = videoView.getScreenScale();
+// 画面比例（持久化）
+player.setScreenScale(VideoView.SCREEN_SCALE_16_9);
+int sc = player.getScreenScale();
+
+// 跳过片头片尾（秒）
+player.setSkipStartTime(30);
+player.setSkipEndTime(60);
+
+// 定时关闭
+player.setTimingOption("30分钟"); // 不启用 / 播完当前 / 30分钟 / 60分钟
+
+// 自动下一集
+player.setAutoNext(true);
 
 // 隐藏底部进度条
-videoView.setHideProgress(true);
-boolean hidden = videoView.isHideProgress();
+player.setHideProgress(true);
 
-// 自动旋转（根据视频宽高比自动切换横竖屏）
-videoView.setAutoRotate(true);
-boolean auto = videoView.isAutoRotate();
-
-// 跳过片头/片尾（单位：秒）
-videoView.setSkipStartTime(30);
-videoView.setSkipEndTime(60);
-int start = videoView.getSkipStartTime();
-int end = videoView.getSkipEndTime();
-
-// 定时关闭（"不启用"、"播完当前"、"30分钟"、"60分钟"）
-videoView.setTimingOption("30分钟");
-String timing = videoView.getTimingOption();
-
-// 自动播放下一集（默认 true，播完当前自动触发下一集回调）
-videoView.setAutoNext(true);
-boolean autoNext = videoView.isAutoNext();
+// 自动旋转
+player.setAutoRotate(true);
 ```
 
 ---
 
-### 7. 选集功能
-
-#### 方式一：默认适配器
+## 选集
 
 ```java
-List<String> episodes = Arrays.asList("第1集", "第2集", "第3集");
-videoView.setEpisodes(episodes, 0);  // 第二个参数为当前选中索引
-
-videoView.setOnEpisodeSelectListener((index, title) -> {
-    videoView.setUrl(getEpisodeUrl(index));
-    videoView.start();
-});
-```
-
-#### 方式二：自定义适配器
-
-```java
-MyEpisodeAdapter adapter = new MyEpisodeAdapter(episodeList);
-videoView.setEpisodeAdapter(adapter);
-
-RecyclerView recyclerView = videoView.getEpisodeRecyclerView();
-```
-
-#### 方式三：完全自定义内容面板
-
-```java
-// 用自定义 View 替换选集面板中的 RecyclerView
-videoView.setEpisodeCustomContentView(customView);
-// 或用布局资源
-videoView.setEpisodeCustomContentView(R.layout.my_episode_panel);
-
-// 恢复默认 RecyclerView
-videoView.restoreEpisodeDefaultContent();
-
-// 获取内容容器，动态添加子 View
-FrameLayout container = videoView.getEpisodeContentContainer();
-```
-
-#### 选集面板外观
-
-```java
-videoView.setEpisodePanelTitle("选择剧集");
-videoView.setEpisodePanelTitleColor(Color.WHITE);
-videoView.setEpisodePanelTitleBarVisibility(View.VISIBLE);
-videoView.setEpisodePanelCloseButtonVisibility(View.VISIBLE);
-```
-
-#### 选集面板控制
-
-```java
-videoView.showEpisodePanel();
-videoView.hideEpisodePanel();
-boolean showing = videoView.isEpisodePanelShowing();
-```
-
-#### 当前集数
-
-```java
-videoView.setCurrentEpisodeIndex(3);
-int index = videoView.getCurrentEpisodeIndex();
-```
-
----
-
-### 8. 上一集 / 下一集
-
-```java
-videoView.setOnUpSetClickListener(view -> {
-    int prev = videoView.getCurrentEpisodeIndex() - 1;
-    videoView.setCurrentEpisodeIndex(prev);
-    videoView.setUrl(getEpisodeUrl(prev));
-    videoView.start();
+// 默认适配器
+player.setEpisodes(Arrays.asList("第1集","第2集","第3集"), 0);
+player.setOnEpisodeSelectListener((index, title) -> {
+    player.setUrl(urls.get(index));
+    player.start();
 });
 
-videoView.setOnDownSetClickListener(view -> {
-    int next = videoView.getCurrentEpisodeIndex() + 1;
-    videoView.setCurrentEpisodeIndex(next);
-    videoView.setUrl(getEpisodeUrl(next));
-    videoView.start();
-});
+// 自定义适配器
+player.setEpisodeAdapter(new MyAdapter(data));
+
+// 完全自定义面板
+player.setEpisodeCustomContentView(R.layout.my_panel);
+player.restoreEpisodeDefaultContent();
+
+// 面板控制
+player.showEpisodePanel();
+player.hideEpisodePanel();
+player.setEpisodePanelTitle("选集");
+player.setCurrentEpisodeIndex(3);
 ```
 
 ---
 
-### 9. 监听器
+## 监听器
 
 ```java
-// 小窗按钮（画中画）
-videoView.setOnWindowClickListener(view -> { /* 启动小窗 */ });
-
-// 投屏按钮
-videoView.setOnScreenClickListener(view -> { /* 启动投屏 */ });
-
-// 选集按钮点击（面板中选中某集后触发）
-videoView.setOnSelectClickListener(view -> { /* 处理选集 */ });
-
-// 上一集 / 下一集
-videoView.setOnUpSetClickListener(view -> { /* 上一集 */ });
-videoView.setOnDownSetClickListener(view -> { /* 下一集 */ });
-
-// 选集面板选中
-videoView.setOnEpisodeSelectListener((index, title) -> { /* 切换视频 */ });
-
-// 竖屏全屏按钮
-videoView.setFullscreenPortraitButtonVisibility(View.VISIBLE);
-videoView.setOnFullscreenPortraitClickListener(view -> { /* 额外操作 */ });
+player.setOnWindowClickListener(v -> { /* 小窗 */ });
+player.setOnScreenClickListener(v -> { /* 投屏 */ });
+player.setOnUpSetClickListener(v -> { /* 上一集 */ });
+player.setOnDownSetClickListener(v -> { /* 下一集 */ });
+player.setOnEpisodeSelectListener((i, t) -> { /* 选集 */ });
+player.setOnFullscreenPortraitClickListener(v -> { /* 竖屏全屏 */ });
 ```
 
 ---
 
-### 10. 按钮可见性控制
-
-所有方法接受 `View.VISIBLE`、`View.GONE` 或 `View.INVISIBLE`。
-
-#### 底部按钮
+## 按钮可见性
 
 ```java
-// 全局（同时影响全屏和非全屏）
-videoView.setVisibilityBottom(View.GONE, View.GONE, View.GONE, View.GONE);
-videoView.setVisibilityBottom(select, speed, previous, next, fullscreen, portraitFullscreen);
+import static com.star.play.PlayerButton.*;
 
-// 仅非全屏
-videoView.setVisibilityBottomNormal(select, speed, previous, next);
-videoView.setVisibilityBottomNormal(select, speed, previous, next, fullscreen, portraitFullscreen);
+// 全局（非全屏 + 全屏一致）
+player.setButtonVisible(SELECT, View.GONE);
+player.setButtonVisible(SPEED, View.VISIBLE);
 
-// 仅全屏
-videoView.setVisibilityBottomFullscreen(select, speed, previous, next);
-videoView.setVisibilityBottomFullscreen(select, speed, previous, next, fullscreen, portraitFullscreen);
-
-// 一次性设置全屏+非全屏 （12 参数）
-videoView.setVisibilityBottomAll(
-    select_n, speed_n, prev_n, next_n, full_n, pf_n,   // 非全屏
-    select_f, speed_f, prev_f, next_f, full_f, pf_f     // 全屏
-);
-
-// 单独控制 — 全局
-videoView.setSelectButtonVisibility(visibility);
-videoView.setSpeedButtonVisibility(visibility);
-videoView.setPreviousButtonVisibility(visibility);
-videoView.setNextButtonVisibility(visibility);
-videoView.setFullscreenButtonVisibility(visibility);
-videoView.setFullscreenPortraitButtonVisibility(visibility);
-
-// 单独控制 — 区分 Normal / Fullscreen
-videoView.setSelectButtonVisibilityNormal(visibility);
-videoView.setSelectButtonVisibilityFullscreen(visibility);
-// ... 每个按钮都有对应的 Normal / Fullscreen 版本，格式为 setXxxVisibility[状态后缀]
+// 区分模式（第 2 参数 = 非全屏，第 3 参数 = 全屏）
+player.setButtonVisible(SELECT, View.GONE, View.VISIBLE);
+player.setButtonVisible(PREV, View.GONE, View.VISIBLE);
 ```
 
-#### 顶部按钮
+底部 6 个：`SELECT` `SPEED` `PREV` `NEXT` `FULLSCREEN` `PORTRAIT_FULLSCREEN`
+顶部 5 个：`BACK` `PIP` `CAST` `SETTINGS` `SYS_TIME`
+
+---
+
+## 颜色
 
 ```java
-// 批量
-videoView.setTitleButtonsVisibility(back, pip, screen, settings);
+import static com.star.play.PlayerColor.*;
 
-// 单独
-videoView.setBackButtonVisibility(visibility);
-videoView.setPipButtonVisibility(visibility);
-videoView.setScreenButtonVisibility(visibility);
-videoView.setSettingsButtonVisibility(visibility);
-videoView.setSysTimeVisibility(visibility);
+// 标题栏所有按钮图标（返回/小窗/投屏/设置）
+player.setColor(TITLE_ICON, Color.WHITE);
+// 底部栏所有按钮图标（播放/上下集/倍速/选集/全屏/竖屏全屏）
+player.setColor(BOTTOM_ICON, Color.WHITE);
 ```
 
 ---
 
-### 11. 颜色自定义
+## 设置面板
 
 ```java
-// 标题栏
-videoView.setTitleTextColor(Color.WHITE);
-videoView.setSysTimeTextColor(Color.WHITE);
-videoView.setTitleContainerBackground(Color.TRANSPARENT);
-videoView.setButtonIconTint(Color.WHITE);           // 标题栏按钮图标
-
-// 底部控制栏
-videoView.setTimeTextColor(Color.WHITE);
-videoView.setBottomContainerBackground(Color.TRANSPARENT);
-videoView.setBottomButtonIconTint(Color.WHITE);     // 底部按钮图标
+player.showSettingsPanel();
+player.hideSettingsPanel();
 ```
 
----
-
-### 12. 设置面板控制
-
-```java
-videoView.showSettingsPanel();
-videoView.hideSettingsPanel();
-boolean open = videoView.isSettingsPanelShowing();
-```
-
-用户可通过设置面板调节：画面比例、静音、隐藏进度条、自动旋转、定时关闭、长按倍速、跳过片头片尾。所有设置自动持久化到 SharedPreferences，重启恢复。
+面板内可调：画面比例、静音、隐藏进度条、**显示缓冲进度**、自动旋转、定时关闭、长按倍速、跳过片头片尾。全部自动持久化。
 
 ---
 
 ## API 速查
 
-### 核心生命周期
-
-| 方法 | 说明 |
+| 分类 | 方法 |
 |------|------|
-| `setPlayerFactory(PlayerFactory factory)` | 设置播放内核（默认 ExoPlayer，可选覆盖） |
-| `setUrl(String url)` | 设置视频地址 |
-| `addDefaultControlComponent(String title, boolean isLive)` | 设置标题并初始化控制器 |
-| `start()` | 开始播放 |
-| `pause()` | 暂停播放 |
-| `resume()` | 恢复播放 |
-| `release()` | 释放播放器资源 |
-| `onBackPressed()` | 处理返回键（返回 true 表示已处理） |
+| **生命周期** | `setPlayerFactory()` `setUrl()` `addDefaultControlComponent()` `start()` `pause()` `resume()` `release()` `onBackPressed()` |
+| **播放** | `setPlaybackSpeed()` `getPlaybackSpeed()` `setLongPressSpeed()` `getLongPressSpeed()` `setMuted()` `isMuted()` |
+| **画面** | `setScreenScale()` `getScreenScale()` `setHideProgress()` `isHideProgress()` `setAutoRotate()` `isAutoRotate()` |
+| **跳过** | `setSkipStartTime()` `getSkipStartTime()` `setSkipEndTime()` `getSkipEndTime()` |
+| **定时** | `setTimingOption()` `getTimingOption()` `setAutoNext()` `isAutoNext()` |
+| **选集** | `setEpisodes()` `setEpisodeAdapter()` `getEpisodeAdapter()` `getEpisodeRecyclerView()` `getCurrentEpisodeIndex()` `setCurrentEpisodeIndex()` |
+| **选集面板** | `showEpisodePanel()` `hideEpisodePanel()` `isEpisodePanelShowing()` `setEpisodePanelTitle()` `setEpisodePanelTitleColor()` `setEpisodePanelTitleBarVisibility()` `setEpisodePanelCloseButtonVisibility()` `setEpisodeCustomContentView()` `restoreEpisodeDefaultContent()` `getEpisodeContentContainer()` |
+| **设置面板** | `showSettingsPanel()` `hideSettingsPanel()` `isSettingsPanelShowing()` |
+| **按钮** | `setButtonVisible(PlayerButton, vis)` `setButtonVisible(PlayerButton, normalVis, fullscreenVis)` |
+| **颜色** | `setColor(PlayerColor, color)` |
+| **监听** | `setOnWindowClickListener()` `setOnScreenClickListener()` `setOnUpSetClickListener()` `setOnDownSetClickListener()` `setOnEpisodeSelectListener()` `setOnFullscreenPortraitClickListener()` |
 
-### 播放控制
-
-| 方法 | 说明 |
-|------|------|
-| `setPlaybackSpeed(float)` / `getPlaybackSpeed()` | 设置/获取播放速度 |
-| `setLongPressSpeed(float)` / `getLongPressSpeed()` | 设置/获取长按倍速 |
-| `setMuted(boolean)` / `isMuted()` | 设置/获取静音状态 |
-| `setScreenScale(int)` / `getScreenScale()` | 设置/获取画面比例（持久化） |
-| `setHideProgress(boolean)` / `isHideProgress()` | 设置/获取隐藏进度条（持久化） |
-| `setAutoRotate(boolean)` / `isAutoRotate()` | 设置/获取自动旋转（持久化） |
-| `setSkipStartTime(int)` / `getSkipStartTime()` | 设置/获取跳过片头（持久化） |
-| `setSkipEndTime(int)` / `getSkipEndTime()` | 设置/获取跳过片尾（持久化） |
-| `setTimingOption(String)` / `getTimingOption()` | 设置/获取定时关闭选项 |
-| `setAutoNext(boolean)` / `isAutoNext()` | 设置/获取自动播放下一集（持久化） |
-
-### 选集
-
-| 方法 | 说明 |
-|------|------|
-| `setEpisodes(List<String>, int)` | 设置剧集列表（使用默认适配器） |
-| `setEpisodeAdapter(Adapter<?>)` | 设置自定义适配器 |
-| `getEpisodeAdapter()` | 获取当前适配器 |
-| `getEpisodeRecyclerView()` | 获取 RecyclerView |
-| `getCurrentEpisodeIndex()` | 获取当前集数 |
-| `setCurrentEpisodeIndex(int)` | 设置当前集数（更新 UI 高亮） |
-| `showEpisodePanel()` / `hideEpisodePanel()` | 显示/隐藏选集面板 |
-| `isEpisodePanelShowing()` | 选集面板是否正在显示 |
-| `setEpisodePanelTitle(String)` | 设置面板标题 |
-| `setEpisodePanelTitleColor(int)` | 设置面板标题颜色 |
-| `setEpisodePanelTitleBarVisibility(int)` | 设置标题栏可见性 |
-| `setEpisodePanelCloseButtonVisibility(int)` | 设置关闭按钮可见性 |
-| `setEpisodeCustomContentView(View)` | 替换内容区域为自定义 View |
-| `setEpisodeCustomContentView(int)` | 替换内容区域为自定义布局 |
-| `restoreEpisodeDefaultContent()` | 恢复默认 RecyclerView 内容 |
-| `getEpisodeContentContainer()` | 获取内容容器 FrameLayout |
-
-### 按钮可见性
-
-| 方法 | 说明 |
-|------|------|
-| `setVisibilityBottom(4 args)` | 底部按钮 — 全局（同时影响全屏/非全屏） |
-| `setVisibilityBottom(6 args)` | 底部按钮 — 全局（含全屏/竖屏全屏按钮） |
-| `setVisibilityBottomNormal(4/6 args)` | 底部按钮 — 仅非全屏 |
-| `setVisibilityBottomFullscreen(4/6 args)` | 底部按钮 — 仅全屏 |
-| `setVisibilityBottomAll(12 args)` | 底部按钮 — 一次性设置全屏+非全屏 |
-| `setXxxVisibility(vis)` | 单独按钮 — 全局 |
-| `setXxxVisibilityNormal(vis)` | 单独按钮 — 仅非全屏 |
-| `setXxxVisibilityFullscreen(vis)` | 单独按钮 — 仅全屏 |
-| `setTitleButtonsVisibility(4 args)` | 顶部按钮 — 批量 |
-| `setXxxVisibility(vis)` | 顶部各按钮 — 单独 |
-
-按钮列表：`Select`(选集)、`Speed`(倍速)、`Previous`(上一集)、`Next`(下一集)、`Fullscreen`(全屏)、`FullscreenPortrait`(竖屏全屏)、`Back`(返回)、`Pip`(小窗)、`Screen`(投屏)、`Settings`(设置)、`SysTime`(系统时间)。
-
-### 颜色
-
-| 方法 | 说明 |
-|------|------|
-| `setTitleTextColor(int)` | 标题文字颜色 |
-| `setSysTimeTextColor(int)` | 系统时间文字颜色 |
-| `setTitleContainerBackground(int)` | 标题栏背景颜色 |
-| `setButtonIconTint(int)` | 标题栏按钮图标颜色 |
-| `setTimeTextColor(int)` | 底部时间文字颜色 |
-| `setBottomContainerBackground(int)` | 底部控制栏背景颜色 |
-| `setBottomButtonIconTint(int)` | 底部按钮图标颜色 |
-
-### 监听器
-
-| 方法 | 说明 |
-|------|------|
-| `setOnWindowClickListener(l)` | 小窗按钮（画中画） |
-| `setOnScreenClickListener(l)` | 投屏按钮 |
-| `setOnSelectClickListener(l)` | 选集选中 |
-| `setOnUpSetClickListener(l)` | 上一集按钮 |
-| `setOnDownSetClickListener(l)` | 下一集按钮 |
-| `setOnEpisodeSelectListener(l)` | 选集面板选中回调 |
-| `setOnFullscreenPortraitClickListener(l)` | 竖屏全屏按钮 |
-
-### 画面比例常量（定义在 VideoView 中）
-
-| 常量 | 说明 |
-|------|------|
-| `SCREEN_SCALE_DEFAULT` | 默认比例 |
-| `SCREEN_SCALE_16_9` | 16:9 比例 |
-| `SCREEN_SCALE_4_3` | 4:3 比例 |
-| `SCREEN_SCALE_MATCH_PARENT` | 填充父容器 |
-| `SCREEN_SCALE_ORIGINAL` | 原始尺寸 |
-| `SCREEN_SCALE_CENTER_CROP` | 居中裁剪 |
-
-### 设置面板控制
-
-| 方法 | 说明 |
-|------|------|
-| `showSettingsPanel()` | 打开设置面板 |
-| `hideSettingsPanel()` | 关闭设置面板 |
-| `isSettingsPanelShowing()` | 面板是否正在显示 |
+**画面比例常量：** `SCREEN_SCALE_DEFAULT` `SCREEN_SCALE_16_9` `SCREEN_SCALE_4_3` `SCREEN_SCALE_MATCH_PARENT` `SCREEN_SCALE_ORIGINAL` `SCREEN_SCALE_CENTER_CROP`
 
 ---
 
-## 混淆配置
+## 混淆
 
 ```pro
 -keep class com.star.play.** { *; }
 -dontwarn com.star.play.**
 ```
 
+---
+
 ## 依赖说明
 
-本库基于 [DKPlayer](https://github.com/Doikki/DKPlayer) 开发，感谢原作者的贡献。
+基于 [DKPlayer](https://github.com/Doikki/DKVideoPlayer)，播放内核使用 [Media3](https://developer.android.com/media/media3/exoplayer)。
+
+---
 
 ## 更新日志
+
+### v2.1.0 (2026-05-03)
+
+#### 新增
+- ✨ **Media3 内核**替代 ExoPlayer 2.x — HLS 缓冲追踪精准，自动识别 m3u8/MP4
+- ✨ **激进缓冲** — 暂停时继续下载，最大 1 小时缓冲量，SeekBar 实时白色缓存条
+- ✨ SeekBar 缓冲进度（`SecondaryProgress`），设置面板可开关
+- ✨ 统一 API —— `setButtonVisible(PlayerButton, vis)` 替代 25 个按钮方法
+- ✨ 统一 API —— `setColor(PlayerColor, color)` 替代 7 个颜色方法
+
+#### 优化
+- 🔧 底部栏 XML 三合一，切换零开销
+- 🔧 `StarPlayerSettings` 统一持久化
+- 🔧 `StarCutoutHelper` 消除刘海屏重复代码
+- 🔧 选集适配器提取为 `StarDefaultEpisodeAdapter`（可继承扩展）
+
+#### 修复
+- 🐛 画面比例重启后丢失 — 已持久化
 
 ### v2.0.0 (2026-05-02)
 
@@ -537,84 +280,19 @@ boolean open = videoView.isSettingsPanelShowing();
 - 🔧 设置面板画面比例映射从字符串匹配改为资源 ID 匹配
 - 🔧 清理 `play/build.gradle` 重复的 `buildFeatures` 声明
 
----
+
 
 ### v1.9.0 (2026-04-07)
 
-#### 新增功能
-- ✨ SeekBar 替换 Slider — 进度条从 Material Slider 替换为原生 SeekBar
-- ✨ 拖动时间指示器 — 拖动进度条时气泡跟随 thumb 实时显示时间
-- ✨ 标题栏颜色自定义 — 标题文字色、系统时间色、按钮图标色、背景色
-- ✨ 底部控制栏颜色自定义 — 时间文字色、按钮图标色、背景色
-
----
+- SeekBar 替换 Slider、拖动时间指示器、标题栏/底部栏颜色自定义
 
 ### v1.8.0 (2025-03-29)
 
-#### 优化改进
-- 移除设置面板中的播放内核切换功能，改为用户自行调用 `setPlayerFactory()` 设置内核
-- 避免因未引入某个播放内核导致切换崩溃
+- 移除设置面板内核切换，改为用户自行 `setPlayerFactory()`
 
----
+### v1.7.0 ~ v1.0.0
 
-### v1.7.0 (2025-03-09)
-
-#### 新增功能
-- ✨ 按钮可见性支持区分全屏/非全屏 — 新增 `Normal` / `Fullscreen` 后缀方法
-- ✨ 倍速按钮弹出菜单选择播放速度 — 支持 0.5x ~ 3.0x 八档
-
----
-
-### v1.6.0 (2025-03-07)
-
-#### 修复问题
-- 🐛 修复 Slider 进度值超出范围导致崩溃（`Math.max(0, Math.min(1000, progress))`）
-
----
-
-### v1.4.0 (2025-03-07)
-
-#### 新增功能
-- 新增 `StarShortDramaPlayer` 短剧专用播放器，自动隐藏选集/上下集按钮
-- 新增双击暂停/播放功能
-
----
-
-### v1.3.0 (2025-03-06)
-
-#### 新增功能
-- 竖屏全屏模式，新增竖屏全屏按钮和监听
-- 按钮可见性控制 — 底部/顶部按钮批量及单独控制
-
-#### 优化改进
-- 修复全屏切换后按钮可见性状态丢失
-
----
-
-### v1.2.0 (2025-03-05)
-
-#### 新增功能
-- 选集功能支持自定义适配器
-- 设置面板新增隐藏进度条、自动旋转开关
-- 全屏模式下播放按钮组居中显示
-
-#### 修复问题
-- 修复锁屏按钮无效、全屏标题栏不显示、加载指示器不显示等多项问题
-- 修复多处空指针风险和数组越界
-
----
-
-### v1.1.0 (2025-03-04)
-
-#### 修复问题
-- 修复打包版本过高和权限冲突
-
----
-
-### v1.0.0 (2025-03-03)
-
-#### 首次发布
-- 基于 DKPlayer 封装，支持双内核、倍速播放、手势控制、全屏/小窗、锁屏、刘海屏适配
+- 按钮可见性区分全屏/非全屏、倍速弹窗、竖屏全屏、选集、手势控制、锁屏等
 
 ## License
 

@@ -348,7 +348,25 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
     public void setCurrentSpeed(float speed) { mCurrentSpeed = speed; }
     public void setShowBottomProgress(boolean show) { mIsShowBottomProgress = show; }
 
+    /** 直接应用 BottomBarConfig，Fluent API 入口 */
+    public void applyConfig(com.star.play.BottomBarConfig c) {
+        mSelectVisN = c.normal.select; mSpeedVisN = c.normal.speed;
+        mPrevVisN = c.normal.prev; mNextVisN = c.normal.next;
+        mFullscreenVisN = c.normal.fullscreen; mFullscreenPortraitVisN = c.normal.portraitFullscreen;
+        mSelectVisF = c.fullscreen.select; mSpeedVisF = c.fullscreen.speed;
+        mPrevVisF = c.fullscreen.prev; mNextVisF = c.fullscreen.next;
+        mFullscreenVisF = c.fullscreen.fullscreen; mFullscreenPortraitVisF = c.fullscreen.portraitFullscreen;
+        applyButtonVisibility();
+    }
+
     private int mLastBufferedPercent;
+
+    public void clearBufferedProgress() {
+        mLastBufferedPercent = 0;
+        nSeekBar.setSecondaryProgress(0);
+        fSeekBar.setSecondaryProgress(0);
+        if (mBottomProgress != null) mBottomProgress.setSecondaryProgress(0);
+    }
 
     public void setBufferedProgress(int percent) {
         if (percent <= 0) {

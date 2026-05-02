@@ -6,18 +6,17 @@ import android.view.Surface;
 import android.view.SurfaceHolder;
 
 import androidx.annotation.Nullable;
+import androidx.media3.common.C;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
 import androidx.media3.common.VideoSize;
 import androidx.media3.exoplayer.DefaultLoadControl;
 import androidx.media3.exoplayer.ExoPlayer;
-import androidx.media3.exoplayer.LoadControl;
-import androidx.media3.exoplayer.analytics.PlayerId;
 import androidx.media3.exoplayer.hls.HlsMediaSource;
 import androidx.media3.exoplayer.source.MediaSource;
 import androidx.media3.exoplayer.source.ProgressiveMediaSource;
-import androidx.media3.exoplayer.upstream.Allocator;
+import androidx.media3.exoplayer.upstream.DefaultAllocator;
 import androidx.media3.datasource.DefaultHttpDataSource;
 
 import xyz.doikki.videoplayer.player.AbstractPlayer;
@@ -227,50 +226,37 @@ public class Media3Player extends AbstractPlayer implements Player.Listener {
 
     // ── 激进缓冲 LoadControl：暂停也继续加载 ──
 
-    private static class EagerLoadControl implements LoadControl {
-
-        private final DefaultLoadControl mDelegate;
+    @SuppressWarnings("deprecation")
+    private static class EagerLoadControl extends DefaultLoadControl {
 
         EagerLoadControl() {
-            mDelegate = new DefaultLoadControl.Builder()
-                    .setBufferDurationsMs(
-                            50_000,          // minBufferMs
-                            3_600_000,       // maxBufferMs 1小时
-                            50_000,          // bufferForPlaybackMs
-                            50_000           // bufferForPlaybackAfterRebufferMs
-                    )
-                    .build();
-        }
-
-
-        @Override
-        public Allocator getAllocator(PlayerId playerId) {
-            return mDelegate.getAllocator(playerId);
+            super(
+                new DefaultAllocator(true, C.DEFAULT_BUFFER_SEGMENT_SIZE),
+                DefaultLoadControl.DEFAULT_MIN_BUFFER_MS,
+                DefaultLoadControl.DEFAULT_MIN_BUFFER_FOR_LOCAL_PLAYBACK_MS,
+                3_600_000, // maxBufferMs 1小时
+                DefaultLoadControl.DEFAULT_MAX_BUFFER_FOR_LOCAL_PLAYBACK_MS,
+                50_000,    // bufferForPlaybackMs
+                DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_FOR_LOCAL_PLAYBACK_MS,
+                50_000,    // bufferForPlaybackAfterRebufferMs
+                DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_FOR_LOCAL_PLAYBACK_MS,
+                DefaultLoadControl.DEFAULT_TARGET_BUFFER_BYTES,
+                DefaultLoadControl.DEFAULT_PRIORITIZE_TIME_OVER_SIZE_THRESHOLDS,
+                DefaultLoadControl.DEFAULT_PRIORITIZE_TIME_OVER_SIZE_THRESHOLDS_FOR_LOCAL_PLAYBACK,
+                DefaultLoadControl.DEFAULT_BACK_BUFFER_DURATION_MS,
+                DefaultLoadControl.DEFAULT_RETAIN_BACK_BUFFER_FROM_KEYFRAME,
+                com.google.common.collect.ImmutableMap.of()
+            );
         }
 
         @Override
         public boolean shouldContinueLoading(long playbackPositionUs,
                                               long bufferedDurationUs,
                                               float playbackSpeed) {
-            // 暂停时继续缓冲，直到缓冲量达到 maxBufferMs (1小时)
-            return bufferedDurationUs < 3_600_000_000L;
-        }
-
-        @Override
-        public boolean shouldStartPlayback(long bufferedDurationUs, float playbackSpeed,
-                                            boolean rebuffering, long targetLiveOffsetUs) {
-            return mDelegate.shouldStartPlayback(
-                    bufferedDurationUs, playbackSpeed, rebuffering, targetLiveOffsetUs);
-        }
-
-        @Override
-        public long getBackBufferDurationUs() {
-            return 0;
-        }
-
-        @Override
-        public boolean retainBackBufferFromKeyframe() {
-            return false;
+            if (bufferedDurationUs < 3_600_000_000L) {
+                return true;
+            }
+            return super.shouldContinueLoading(playbackPositionUs, bufferedDurationUs, playbackSpeed);
         }
     }
 }

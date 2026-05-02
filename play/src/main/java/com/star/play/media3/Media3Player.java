@@ -265,7 +265,7 @@ public class Media3Player extends AbstractPlayer implements Player.Listener {
 
         @Override
         public long getBackBufferDurationUs() {
-            return mDelegate.getBackBufferDurationUs();
+            return 0;
         }
     }
 }

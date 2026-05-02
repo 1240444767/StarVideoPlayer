@@ -5,7 +5,7 @@ import android.content.pm.ActivityInfo;
 import android.view.View;
 import android.view.ViewGroup;
 
-import xyz.doikki.videoplayer.controller.ControlWrapper;
+import com.star.play.controller.PlayerController;
 
 /**
  * Shared utility for applying notch/cutout-aware padding or margin to a view.
@@ -24,7 +24,7 @@ public final class StarCutoutHelper {
      * @param wrapper the controller wrapper providing cutout info
      * @param activity the host activity
      */
-    public static void applyCutoutPadding(View target, ControlWrapper wrapper, Activity activity) {
+    public static void applyCutoutPadding(View target, PlayerController wrapper, Activity activity) {
         if (activity == null || wrapper == null || !wrapper.hasCutout()) return;
 
         int orientation = activity.getRequestedOrientation();
@@ -46,7 +46,7 @@ public final class StarCutoutHelper {
      * @param wrapper the controller wrapper providing cutout info
      * @param activity the host activity
      */
-    public static void applyCutoutMargin(View target, ControlWrapper wrapper, Activity activity) {
+    public static void applyCutoutMargin(View target, PlayerController wrapper, Activity activity) {
         applyCutoutMargin(target, wrapper, activity, 0, 0);
     }
 
@@ -60,7 +60,7 @@ public final class StarCutoutHelper {
      * @param baseStartPx  base margin in pixels for the start side (left in LTR)
      * @param baseEndPx    base margin in pixels for the end side (right in LTR)
      */
-    public static void applyCutoutMargin(View target, ControlWrapper wrapper, Activity activity,
+    public static void applyCutoutMargin(View target, PlayerController wrapper, Activity activity,
                                          int baseStartPx, int baseEndPx) {
         ViewGroup.LayoutParams lp = target.getLayoutParams();
         if (!(lp instanceof ViewGroup.MarginLayoutParams)) return;
@@ -93,7 +93,7 @@ public final class StarCutoutHelper {
      * @param activity  the host activity
      * @param basePx    base padding in pixels on the non-cutout sides
      */
-    public static void applyCutoutPadding(View target, ControlWrapper wrapper, Activity activity,
+    public static void applyCutoutPadding(View target, PlayerController wrapper, Activity activity,
                                           int basePx) {
         if (activity == null || wrapper == null || !wrapper.hasCutout()) {
             target.setPadding(basePx, 0, basePx, 0);

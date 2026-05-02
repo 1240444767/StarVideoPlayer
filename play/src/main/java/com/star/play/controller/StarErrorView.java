@@ -16,9 +16,9 @@ import androidx.annotation.Nullable;
 import com.google.android.material.button.MaterialButton;
 import com.star.play.R;
 
-import xyz.doikki.videoplayer.controller.ControlWrapper;
-import xyz.doikki.videoplayer.controller.IControlComponent;
-import xyz.doikki.videoplayer.player.VideoView;
+import com.star.play.controller.PlayerController;
+import com.star.play.controller.IControlComponent;
+import com.star.play.controller.PlayerConstants;
 
 /**
  * 播放错误提示界面
@@ -26,7 +26,7 @@ import xyz.doikki.videoplayer.player.VideoView;
  */
 public class StarErrorView extends FrameLayout implements IControlComponent {
 
-    private ControlWrapper mControlWrapper;      // 控制器包装类
+    private PlayerController mPlayerController;      // 控制器包装类
 
     private TextView mMessageView;                // 错误信息文本
     private MaterialButton mRetryButton;          // 重试按钮
@@ -64,11 +64,11 @@ public class StarErrorView extends FrameLayout implements IControlComponent {
 
         // 设置重试点击事件
         mRetryButton.setOnClickListener(v -> {
-            if (mControlWrapper == null) return;
+            if (mPlayerController == null) return;
             // 隐藏当前视图
             setVisibility(GONE);
             // 调用控制器的 replay 方法重新播放，参数 false 表示不重置播放状态（根据 DKPlayer 定义）
-            mControlWrapper.replay(false);
+            mPlayerController.replay(false);
         });
 
         // 设置可点击，防止点击事件穿透到下层
@@ -76,8 +76,8 @@ public class StarErrorView extends FrameLayout implements IControlComponent {
     }
 
     @Override
-    public void attach(@NonNull ControlWrapper controlWrapper) {
-        mControlWrapper = controlWrapper;
+    public void attach(@NonNull PlayerController controlWrapper) {
+        mPlayerController = controlWrapper;
     }
 
     @Nullable
@@ -94,11 +94,11 @@ public class StarErrorView extends FrameLayout implements IControlComponent {
     @Override
     public void onPlayStateChanged(int playState) {
         // 当播放状态为出错时显示本视图
-        if (playState == VideoView.STATE_ERROR) {
+        if (playState == PlayerConstants.STATE_ERROR) {
             // 将视图置于顶层，避免被其他控件遮挡
             bringToFront();
             setVisibility(VISIBLE);
-        } else if (playState == VideoView.STATE_IDLE) {
+        } else if (playState == PlayerConstants.STATE_IDLE) {
             // 当播放器空闲时隐藏错误视图
             setVisibility(GONE);
         }

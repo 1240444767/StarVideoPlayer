@@ -19,13 +19,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.button.MaterialButton;
 import com.star.play.R;
 
-import xyz.doikki.videoplayer.controller.ControlWrapper;
-import xyz.doikki.videoplayer.controller.IControlComponent;
-import xyz.doikki.videoplayer.player.VideoView;
+import com.star.play.controller.PlayerController;
+import com.star.play.controller.IControlComponent;
+import com.star.play.controller.PlayerConstants;
 
 public class StarEpisodeView extends FrameLayout implements IControlComponent {
 
-    private ControlWrapper mControlWrapper;
+    private PlayerController mPlayerController;
 
     private LinearLayout mPanelView;
     private View mDimView;
@@ -204,7 +204,7 @@ public class StarEpisodeView extends FrameLayout implements IControlComponent {
         mDimView.setAlpha(0f);
         mDimView.animate().alpha(1f).setDuration(250).start();
 
-        if (mControlWrapper != null) mControlWrapper.hide();
+        if (mPlayerController != null) mPlayerController.hide();
     }
 
     public void hide() {
@@ -237,8 +237,8 @@ public class StarEpisodeView extends FrameLayout implements IControlComponent {
     }
 
     @Override
-    public void attach(@NonNull ControlWrapper controlWrapper) {
-        mControlWrapper = controlWrapper;
+    public void attach(@NonNull PlayerController controlWrapper) {
+        mPlayerController = controlWrapper;
     }
 
     @Nullable
@@ -251,7 +251,7 @@ public class StarEpisodeView extends FrameLayout implements IControlComponent {
     @Override
     public void onPlayStateChanged(int playState) {
         if (mIsShowing &&
-                (playState == VideoView.STATE_IDLE || playState == VideoView.STATE_ERROR)) {
+                (playState == PlayerConstants.STATE_IDLE || playState == PlayerConstants.STATE_ERROR)) {
             hide();
         }
     }

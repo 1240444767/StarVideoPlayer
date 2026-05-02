@@ -24,13 +24,13 @@ import com.star.play.R;
 
 import java.util.Locale;
 
-import xyz.doikki.videoplayer.controller.ControlWrapper;
-import xyz.doikki.videoplayer.controller.IControlComponent;
-import xyz.doikki.videoplayer.player.VideoView;
+import com.star.play.controller.PlayerController;
+import com.star.play.controller.IControlComponent;
+import com.star.play.controller.PlayerConstants;
 
 public class StarSettingsView extends FrameLayout implements IControlComponent {
 
-    private ControlWrapper mControlWrapper;
+    private PlayerController mPlayerController;
 
     // 视图
     private View mDimView;
@@ -387,32 +387,32 @@ public class StarSettingsView extends FrameLayout implements IControlComponent {
 
     // ---------- 辅助方法 ----------
     private static int mapChipIdToScaleType(int chipId) {
-        if (chipId == R.id.chip_scale_16_9)    return VideoView.SCREEN_SCALE_16_9;
-        if (chipId == R.id.chip_scale_4_3)     return VideoView.SCREEN_SCALE_4_3;
-        if (chipId == R.id.chip_scale_fill)    return VideoView.SCREEN_SCALE_MATCH_PARENT;
-        if (chipId == R.id.chip_scale_original)return VideoView.SCREEN_SCALE_ORIGINAL;
-        if (chipId == R.id.chip_scale_crop)    return VideoView.SCREEN_SCALE_CENTER_CROP;
-        return VideoView.SCREEN_SCALE_DEFAULT;
+        if (chipId == R.id.chip_scale_16_9)    return PlayerConstants.SCREEN_SCALE_16_9;
+        if (chipId == R.id.chip_scale_4_3)     return PlayerConstants.SCREEN_SCALE_4_3;
+        if (chipId == R.id.chip_scale_fill)    return PlayerConstants.SCREEN_SCALE_MATCH_PARENT;
+        if (chipId == R.id.chip_scale_original)return PlayerConstants.SCREEN_SCALE_ORIGINAL;
+        if (chipId == R.id.chip_scale_crop)    return PlayerConstants.SCREEN_SCALE_CENTER_CROP;
+        return PlayerConstants.SCREEN_SCALE_DEFAULT;
     }
 
     private static int getScaleTypeChipId(int type) {
         switch (type) {
-            case VideoView.SCREEN_SCALE_16_9:         return R.id.chip_scale_16_9;
-            case VideoView.SCREEN_SCALE_4_3:          return R.id.chip_scale_4_3;
-            case VideoView.SCREEN_SCALE_MATCH_PARENT: return R.id.chip_scale_fill;
-            case VideoView.SCREEN_SCALE_ORIGINAL:     return R.id.chip_scale_original;
-            case VideoView.SCREEN_SCALE_CENTER_CROP:  return R.id.chip_scale_crop;
+            case PlayerConstants.SCREEN_SCALE_16_9:         return R.id.chip_scale_16_9;
+            case PlayerConstants.SCREEN_SCALE_4_3:          return R.id.chip_scale_4_3;
+            case PlayerConstants.SCREEN_SCALE_MATCH_PARENT: return R.id.chip_scale_fill;
+            case PlayerConstants.SCREEN_SCALE_ORIGINAL:     return R.id.chip_scale_original;
+            case PlayerConstants.SCREEN_SCALE_CENTER_CROP:  return R.id.chip_scale_crop;
             default:                                   return R.id.chip_scale_default;
         }
     }
 
     private static String getScaleText(int type) {
         switch (type) {
-            case VideoView.SCREEN_SCALE_16_9:         return "16 : 9";
-            case VideoView.SCREEN_SCALE_4_3:          return "4 : 3";
-            case VideoView.SCREEN_SCALE_MATCH_PARENT: return "填 充";
-            case VideoView.SCREEN_SCALE_ORIGINAL:     return "缩 放";
-            case VideoView.SCREEN_SCALE_CENTER_CROP:  return "裁 剪";
+            case PlayerConstants.SCREEN_SCALE_16_9:         return "16 : 9";
+            case PlayerConstants.SCREEN_SCALE_4_3:          return "4 : 3";
+            case PlayerConstants.SCREEN_SCALE_MATCH_PARENT: return "填 充";
+            case PlayerConstants.SCREEN_SCALE_ORIGINAL:     return "缩 放";
+            case PlayerConstants.SCREEN_SCALE_CENTER_CROP:  return "裁 剪";
             default:                                   return "默 认";
         }
     }
@@ -439,7 +439,7 @@ public class StarSettingsView extends FrameLayout implements IControlComponent {
         mDimView.setAlpha(0f);
         mDimView.animate().alpha(1f).setDuration(260).start();
 
-        if (mControlWrapper != null) mControlWrapper.hide();
+        if (mPlayerController != null) mPlayerController.hide();
     }
 
     public void hide() {
@@ -474,8 +474,8 @@ public class StarSettingsView extends FrameLayout implements IControlComponent {
 
     // ---------- IControlComponent 实现 ----------
     @Override
-    public void attach(@NonNull ControlWrapper controlWrapper) {
-        mControlWrapper = controlWrapper;
+    public void attach(@NonNull PlayerController controlWrapper) {
+        mPlayerController = controlWrapper;
     }
 
     @Nullable
@@ -490,7 +490,7 @@ public class StarSettingsView extends FrameLayout implements IControlComponent {
     @Override
     public void onPlayStateChanged(int playState) {
         if (mIsShowing &&
-                (playState == VideoView.STATE_IDLE || playState == VideoView.STATE_ERROR)) {
+                (playState == PlayerConstants.STATE_IDLE || playState == PlayerConstants.STATE_ERROR)) {
             hide();
         }
     }

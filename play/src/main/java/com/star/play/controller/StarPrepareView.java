@@ -16,10 +16,11 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.star.play.R;
 
-import xyz.doikki.videoplayer.controller.ControlWrapper;
-import xyz.doikki.videoplayer.controller.IControlComponent;
-import xyz.doikki.videoplayer.player.VideoView;
-import xyz.doikki.videoplayer.player.VideoViewManager;
+import com.star.play.controller.PlayerController;
+import com.star.play.controller.IControlComponent;
+import com.star.play.controller.PlayerUtils;
+import com.star.play.controller.PlayerConstants;
+
 
 /**
  * 准备播放界面
@@ -27,7 +28,7 @@ import xyz.doikki.videoplayer.player.VideoViewManager;
  */
 public class StarPrepareView extends FrameLayout implements IControlComponent {
 
-    private ControlWrapper mControlWrapper;
+    private PlayerController mPlayerController;
 
     private ImageView mThumbView;                     // 封面图
     private MaterialButton mStartPlayButton;          // 开始播放按钮
@@ -69,10 +70,10 @@ public class StarPrepareView extends FrameLayout implements IControlComponent {
             // 隐藏移动网络警告
             mNetWarningLayout.setVisibility(GONE);
             // 告知播放器允许使用移动网络播放（DKPlayer 全局设置）
-            VideoViewManager.instance().setPlayOnMobileNetwork(true);
+            // mobile network handled by caller
             // 开始播放
-            if (mControlWrapper != null) {
-                mControlWrapper.start();
+            if (mPlayerController != null) {
+                mPlayerController.start();
             }
         });
 
@@ -85,15 +86,15 @@ public class StarPrepareView extends FrameLayout implements IControlComponent {
      */
     public void setClickStart() {
         setOnClickListener(v -> {
-            if (mControlWrapper != null) {
-                mControlWrapper.start();
+            if (mPlayerController != null) {
+                mPlayerController.start();
             }
         });
     }
 
     @Override
-    public void attach(@NonNull ControlWrapper controlWrapper) {
-        mControlWrapper = controlWrapper;
+    public void attach(@NonNull PlayerController controlWrapper) {
+        mPlayerController = controlWrapper;
     }
 
     @Nullable
@@ -110,7 +111,7 @@ public class StarPrepareView extends FrameLayout implements IControlComponent {
     @Override
     public void onPlayStateChanged(int playState) {
         switch (playState) {
-            case VideoView.STATE_PREPARING:
+            case PlayerConstants.STATE_PREPARING:
                 // 正在准备：显示加载圈，隐藏开始按钮和警告
                 bringToFront();
                 setVisibility(VISIBLE);
@@ -118,16 +119,16 @@ public class StarPrepareView extends FrameLayout implements IControlComponent {
                 mNetWarningLayout.setVisibility(GONE);
                 mLoadingIndicator.setVisibility(View.VISIBLE);
                 break;
-            case VideoView.STATE_PLAYING:
-            case VideoView.STATE_PAUSED:
-            case VideoView.STATE_ERROR:
-            case VideoView.STATE_BUFFERING:
-            case VideoView.STATE_BUFFERED:
-            case VideoView.STATE_PLAYBACK_COMPLETED:
+            case PlayerConstants.STATE_PLAYING:
+            case PlayerConstants.STATE_PAUSED:
+            case PlayerConstants.STATE_ERROR:
+            case PlayerConstants.STATE_BUFFERING:
+            case PlayerConstants.STATE_BUFFERED:
+            case PlayerConstants.STATE_PLAYBACK_COMPLETED:
                 // 这些状态隐藏准备视图
                 setVisibility(GONE);
                 break;
-            case VideoView.STATE_IDLE:
+            case PlayerConstants.STATE_IDLE:
                 // 空闲状态：显示封面和开始按钮，隐藏加载和警告
                 setVisibility(VISIBLE);
                 bringToFront();
@@ -136,7 +137,7 @@ public class StarPrepareView extends FrameLayout implements IControlComponent {
                 mStartPlayButton.setVisibility(View.VISIBLE);
                 mThumbView.setVisibility(View.VISIBLE);
                 break;
-            case VideoView.STATE_START_ABORT:
+            case PlayerConstants.STATE_START_ABORT:
                 // 开始播放中止（通常是因为移动网络限制）：显示移动网络警告
                 setVisibility(VISIBLE);
                 mNetWarningLayout.setVisibility(VISIBLE);

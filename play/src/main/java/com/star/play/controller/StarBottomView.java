@@ -23,10 +23,11 @@ import androidx.annotation.Nullable;
 import com.google.android.material.button.MaterialButton;
 import com.star.play.R;
 
-import xyz.doikki.videoplayer.controller.ControlWrapper;
-import xyz.doikki.videoplayer.controller.IControlComponent;
-import xyz.doikki.videoplayer.player.VideoView;
-import xyz.doikki.videoplayer.util.PlayerUtils;
+import com.star.play.controller.PlayerController;
+import com.star.play.controller.IControlComponent;
+import com.star.play.controller.PlayerConstants;
+import com.star.play.controller.PlayerUtils;
+
 
 public class StarBottomView extends FrameLayout implements IControlComponent {
 
@@ -39,7 +40,7 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
     public interface OnFullscreenPortraitClickListener { void onClick(View view); }
 
     // ── State ──
-    private ControlWrapper mControlWrapper;
+    private PlayerController mPlayerController;
     private boolean mIsDragging;
     private boolean mIsShowBottomProgress = true;
     private boolean mIsFullScreen;
@@ -125,7 +126,7 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
     // 竖屏监听（只含竖屏有的按钮）
     // ═══════════════════════════════════════════════
     private void setupNormalListeners() {
-        nPlay.setOnClickListener(v -> { if (mControlWrapper != null) mControlWrapper.togglePlay(); });
+        nPlay.setOnClickListener(v -> { if (mPlayerController != null) mPlayerController.togglePlay(); });
         nSeekBar.setOnSeekBarChangeListener(createSeekListener(nCurrTime));
         nFullscreen.setOnClickListener(v -> toggleFullScreen());
         nFullscreenPortrait.setOnClickListener(v -> {
@@ -138,7 +139,7 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
     // 全屏监听（所有按钮都有）
     // ═══════════════════════════════════════════════
     private void setupFullscreenListeners() {
-        fPlay.setOnClickListener(v -> { if (mControlWrapper != null) mControlWrapper.togglePlay(); });
+        fPlay.setOnClickListener(v -> { if (mPlayerController != null) mPlayerController.togglePlay(); });
         fSeekBar.setOnSeekBarChangeListener(createSeekListener(fCurrTime));
 
         fSkipPrev.setOnClickListener(v -> { if (mOnUpSetClickListener != null) mOnUpSetClickListener.onClick(v); });
@@ -157,8 +158,8 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
         return new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser && mControlWrapper != null) {
-                    long duration = mControlWrapper.getDuration();
+                if (fromUser && mPlayerController != null) {
+                    long duration = mPlayerController.getDuration();
                     long seekPos = (long) (duration * progress / 1000f);
                     currTimeView.setText(PlayerUtils.stringForTime((int) seekPos));
                     if (mTimeIndicator != null) {
@@ -171,22 +172,22 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
                 mIsDragging = true;
-                if (mControlWrapper != null) {
-                    mControlWrapper.stopProgress();
-                    mControlWrapper.stopFadeOut();
+                if (mPlayerController != null) {
+                    mPlayerController.stopProgress();
+                    mPlayerController.stopFadeOut();
                 }
                 if (mTimeIndicator != null) mTimeIndicator.setVisibility(View.VISIBLE);
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                if (mControlWrapper != null) {
-                    long duration = mControlWrapper.getDuration();
+                if (mPlayerController != null) {
+                    long duration = mPlayerController.getDuration();
                     long seekPos = (long) (duration * seekBar.getProgress() / 1000f);
-                    mControlWrapper.seekTo(seekPos);
+                    mPlayerController.seekTo(seekPos);
                     mIsDragging = false;
-                    mControlWrapper.startProgress();
-                    mControlWrapper.startFadeOut();
+                    mPlayerController.startProgress();
+                    mPlayerController.startFadeOut();
                 }
                 if (mTimeIndicator != null) mTimeIndicator.setVisibility(View.GONE);
             }
@@ -224,18 +225,18 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
     // 全屏切换
     // ═══════════════════════════════════════════════
     private void toggleFullScreen() {
-        if (mControlWrapper == null) return;
+        if (mPlayerController == null) return;
         Activity activity = PlayerUtils.scanForActivity(getContext());
-        mControlWrapper.toggleFullScreen(activity);
+        mPlayerController.toggleFullScreen(activity);
     }
 
     private void togglePortraitFullScreen() {
-        if (mControlWrapper == null) return;
+        if (mPlayerController == null) return;
         Activity activity = PlayerUtils.scanForActivity(getContext());
         if (activity != null) {
             activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         }
-        mControlWrapper.startFullScreen();
+        mPlayerController.startFullScreen();
     }
 
     private void updateTimeIndicatorPosition(SeekBar seekBar) {
@@ -412,7 +413,7 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
     // ═══════════════════════════════════════════════
     // IControlComponent
     // ═══════════════════════════════════════════════
-    @Override public void attach(@NonNull ControlWrapper w) { mControlWrapper = w; }
+    @Override public void attach(@NonNull PlayerController w) { mPlayerController = w; }
     @Nullable @Override public View getView() { return this; }
 
     @Override
@@ -440,21 +441,21 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
     @Override
     public void onPlayStateChanged(int playState) {
         switch (playState) {
-            case VideoView.STATE_IDLE:
-            case VideoView.STATE_PLAYBACK_COMPLETED:
+            case PlayerConstants.STATE_IDLE:
+            case PlayerConstants.STATE_PLAYBACK_COMPLETED:
                 setVisibility(GONE);
                 if (mBottomProgress != null) { mBottomProgress.setProgress(0); mBottomProgress.setSecondaryProgress(0); }
                 nSeekBar.setProgress(0); fSeekBar.setProgress(0);
                 nPlay.setIconResource(R.drawable.play_arrow);
                 fPlay.setIconResource(R.drawable.play_arrow);
                 break;
-            case VideoView.STATE_START_ABORT:
-            case VideoView.STATE_ERROR:
+            case PlayerConstants.STATE_START_ABORT:
+            case PlayerConstants.STATE_ERROR:
                 setVisibility(GONE);
                 nPlay.setIconResource(R.drawable.play_arrow);
                 fPlay.setIconResource(R.drawable.play_arrow);
                 break;
-            case VideoView.STATE_PREPARING:
+            case PlayerConstants.STATE_PREPARING:
                 nPlay.setIconResource(R.drawable.pause);
                 fPlay.setIconResource(R.drawable.pause);
                 if (mIsFullScreen) {
@@ -465,7 +466,7 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
                     setVisibility(GONE);
                 }
                 break;
-            case VideoView.STATE_PREPARED:
+            case PlayerConstants.STATE_PREPARED:
                 nPlay.setIconResource(R.drawable.play_arrow);
                 fPlay.setIconResource(R.drawable.play_arrow);
                 if (mIsFullScreen) {
@@ -474,7 +475,7 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
 
                 }
                 break;
-            case VideoView.STATE_PLAYING:
+            case PlayerConstants.STATE_PLAYING:
                 nPlay.setIconResource(R.drawable.pause);
                 fPlay.setIconResource(R.drawable.pause);
                 if (mIsFullScreen) {
@@ -484,7 +485,7 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
                     if (mIsShowBottomProgress && mBottomProgress != null) mBottomProgress.setVisibility(GONE);
                 } else {
                     if (mIsShowBottomProgress) {
-                        boolean ctrlShowing = mControlWrapper != null && mControlWrapper.isShowing();
+                        boolean ctrlShowing = mPlayerController != null && mPlayerController.isShowing();
                         if (mBottomProgress != null) mBottomProgress.setVisibility(ctrlShowing ? GONE : VISIBLE);
                         mContainerNormal.setVisibility(VISIBLE);
                     } else {
@@ -492,28 +493,28 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
                     }
                     setVisibility(VISIBLE);
                 }
-                if (mControlWrapper != null) mControlWrapper.startProgress();
+                if (mPlayerController != null) mPlayerController.startProgress();
                 break;
-            case VideoView.STATE_PAUSED:
+            case PlayerConstants.STATE_PAUSED:
                 nPlay.setIconResource(R.drawable.play_arrow);
                 fPlay.setIconResource(R.drawable.play_arrow);
                 break;
-            case VideoView.STATE_BUFFERING:
+            case PlayerConstants.STATE_BUFFERING:
                 nPlay.setIconResource(R.drawable.pause);
                 fPlay.setIconResource(R.drawable.pause);
-                if (mControlWrapper != null) mControlWrapper.stopProgress();
+                if (mPlayerController != null) mPlayerController.stopProgress();
                 break;
-            case VideoView.STATE_BUFFERED:
-                nPlay.setIconResource(mControlWrapper != null && mControlWrapper.isPlaying() ? R.drawable.pause : R.drawable.play_arrow);
-                fPlay.setIconResource(mControlWrapper != null && mControlWrapper.isPlaying() ? R.drawable.pause : R.drawable.play_arrow);
-                if (mControlWrapper != null) mControlWrapper.startProgress();
+            case PlayerConstants.STATE_BUFFERED:
+                nPlay.setIconResource(mPlayerController != null && mPlayerController.isPlaying() ? R.drawable.pause : R.drawable.play_arrow);
+                fPlay.setIconResource(mPlayerController != null && mPlayerController.isPlaying() ? R.drawable.pause : R.drawable.play_arrow);
+                if (mPlayerController != null) mPlayerController.startProgress();
                 break;
         }
     }
 
     @Override
     public void onPlayerStateChanged(int playerState) {
-        if (playerState == VideoView.PLAYER_FULL_SCREEN) {
+        if (playerState == PlayerConstants.PLAYER_FULL_SCREEN) {
             mIsFullScreen = true;
             mContainerNormal.setVisibility(GONE);
             mContainerFullscreen.setVisibility(VISIBLE);

@@ -16,10 +16,11 @@ import androidx.annotation.Nullable;
 import com.google.android.material.button.MaterialButton;
 import com.star.play.R;
 
-import xyz.doikki.videoplayer.controller.ControlWrapper;
-import xyz.doikki.videoplayer.controller.IControlComponent;
-import xyz.doikki.videoplayer.player.VideoView;
-import xyz.doikki.videoplayer.util.PlayerUtils;
+import com.star.play.controller.PlayerController;
+import com.star.play.controller.IControlComponent;
+import com.star.play.controller.PlayerConstants;
+import com.star.play.controller.PlayerUtils;
+
 
 /**
  * 直播底部控制栏
@@ -27,7 +28,7 @@ import xyz.doikki.videoplayer.util.PlayerUtils;
  */
 public class StarLiveControlView extends FrameLayout implements IControlComponent, View.OnClickListener {
 
-    private ControlWrapper mControlWrapper;
+    private PlayerController mPlayerController;
 
     private MaterialButton mPlayButton;       // 播放/暂停按钮
     private MaterialButton mRefreshButton;    // 刷新按钮
@@ -70,8 +71,8 @@ public class StarLiveControlView extends FrameLayout implements IControlComponen
     }
 
     @Override
-    public void attach(@NonNull ControlWrapper controlWrapper) {
-        mControlWrapper = controlWrapper;
+    public void attach(@NonNull PlayerController controlWrapper) {
+        mPlayerController = controlWrapper;
     }
 
     @Nullable
@@ -102,24 +103,24 @@ public class StarLiveControlView extends FrameLayout implements IControlComponen
     @Override
     public void onPlayStateChanged(int playState) {
         switch (playState) {
-            case VideoView.STATE_IDLE:
-            case VideoView.STATE_START_ABORT:
-            case VideoView.STATE_PREPARING:
-            case VideoView.STATE_PREPARED:
-            case VideoView.STATE_ERROR:
-            case VideoView.STATE_PLAYBACK_COMPLETED:
+            case PlayerConstants.STATE_IDLE:
+            case PlayerConstants.STATE_START_ABORT:
+            case PlayerConstants.STATE_PREPARING:
+            case PlayerConstants.STATE_PREPARED:
+            case PlayerConstants.STATE_ERROR:
+            case PlayerConstants.STATE_PLAYBACK_COMPLETED:
                 setVisibility(GONE);
                 break;
-            case VideoView.STATE_PLAYING:
+            case PlayerConstants.STATE_PLAYING:
                 mPlayButton.setIconResource(R.drawable.pause); // 切换为暂停图标
                 break;
-            case VideoView.STATE_PAUSED:
+            case PlayerConstants.STATE_PAUSED:
                 mPlayButton.setIconResource(R.drawable.play_arrow); // 切换为播放图标
                 break;
-            case VideoView.STATE_BUFFERING:
-            case VideoView.STATE_BUFFERED:
-                if (mControlWrapper != null) {
-                    mPlayButton.setIconResource(mControlWrapper.isPlaying() ?
+            case PlayerConstants.STATE_BUFFERING:
+            case PlayerConstants.STATE_BUFFERED:
+                if (mPlayerController != null) {
+                    mPlayButton.setIconResource(mPlayerController.isPlaying() ?
                             R.drawable.pause : R.drawable.play_arrow);
                 }
                 break;
@@ -129,17 +130,17 @@ public class StarLiveControlView extends FrameLayout implements IControlComponen
     @Override
     public void onPlayerStateChanged(int playerState) {
         switch (playerState) {
-            case VideoView.PLAYER_NORMAL:
+            case PlayerConstants.PLAYER_NORMAL:
                 mFullscreenButton.setIconResource(R.drawable.fullscreen); // 进入全屏图标
                 break;
-            case VideoView.PLAYER_FULL_SCREEN:
+            case PlayerConstants.PLAYER_FULL_SCREEN:
                 mFullscreenButton.setIconResource(R.drawable.fullscreen_exit); // 退出全屏图标
                 break;
         }
 
         // 刘海屏适配
         Activity activity = PlayerUtils.scanForActivity(getContext());
-        StarCutoutHelper.applyCutoutPadding(mBottomContainer, mControlWrapper, activity);
+        StarCutoutHelper.applyCutoutPadding(mBottomContainer, mPlayerController, activity);
     }
 
     @Override
@@ -155,14 +156,14 @@ public class StarLiveControlView extends FrameLayout implements IControlComponen
 
     @Override
     public void onClick(View v) {
-        if (mControlWrapper == null) return;
+        if (mPlayerController == null) return;
 
         int id = v.getId();
         if (id == R.id.play) {
-            mControlWrapper.togglePlay();
+            mPlayerController.togglePlay();
         } else if (id == R.id.refresh) {
             // 刷新直播：重新播放，参数 true 表示重置播放状态
-            mControlWrapper.replay(true);
+            mPlayerController.replay(true);
         } else if (id == R.id.fullscreen) {
             toggleFullScreen();
         }
@@ -173,6 +174,6 @@ public class StarLiveControlView extends FrameLayout implements IControlComponen
      */
     private void toggleFullScreen() {
         Activity activity = PlayerUtils.scanForActivity(getContext());
-        mControlWrapper.toggleFullScreen(activity);
+        mPlayerController.toggleFullScreen(activity);
     }
 }

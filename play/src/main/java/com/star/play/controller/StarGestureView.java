@@ -19,14 +19,15 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 import com.star.play.R;
 
-import xyz.doikki.videoplayer.controller.ControlWrapper;
-import xyz.doikki.videoplayer.controller.IGestureComponent;
-import xyz.doikki.videoplayer.player.VideoView;
-import xyz.doikki.videoplayer.util.PlayerUtils;
+import com.star.play.controller.PlayerController;
+import com.star.play.controller.IGestureComponent;
+import com.star.play.controller.PlayerConstants;
+import com.star.play.controller.PlayerUtils;
+
 
 public class StarGestureView extends FrameLayout implements IGestureComponent {
 
-    private ControlWrapper mControlWrapper;
+    private PlayerController mPlayerController;
 
     private MaterialButton mIconView;
     private LinearProgressIndicator mProgressIndicator;
@@ -57,8 +58,8 @@ public class StarGestureView extends FrameLayout implements IGestureComponent {
     }
 
     @Override
-    public void attach(@NonNull ControlWrapper controlWrapper) {
-        mControlWrapper = controlWrapper;
+    public void attach(@NonNull PlayerController controlWrapper) {
+        mPlayerController = controlWrapper;
     }
 
     @Override
@@ -76,8 +77,8 @@ public class StarGestureView extends FrameLayout implements IGestureComponent {
 
     @Override
     public void onStartSlide() {
-        if (mControlWrapper != null) {
-            mControlWrapper.hide();
+        if (mPlayerController != null) {
+            mPlayerController.hide();
         }
         if (mCenterContainer != null) {
             mCenterContainer.setVisibility(VISIBLE);
@@ -154,12 +155,12 @@ public class StarGestureView extends FrameLayout implements IGestureComponent {
 
     @Override
     public void onPlayStateChanged(int playState) {
-        if (playState == VideoView.STATE_IDLE
-                || playState == VideoView.STATE_START_ABORT
-                || playState == VideoView.STATE_PREPARING
-                || playState == VideoView.STATE_PREPARED
-                || playState == VideoView.STATE_ERROR
-                || playState == VideoView.STATE_PLAYBACK_COMPLETED) {
+        if (playState == PlayerConstants.STATE_IDLE
+                || playState == PlayerConstants.STATE_START_ABORT
+                || playState == PlayerConstants.STATE_PREPARING
+                || playState == PlayerConstants.STATE_PREPARED
+                || playState == PlayerConstants.STATE_ERROR
+                || playState == PlayerConstants.STATE_PLAYBACK_COMPLETED) {
             setVisibility(GONE);
         } else {
             setVisibility(VISIBLE);

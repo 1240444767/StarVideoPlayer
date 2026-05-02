@@ -18,14 +18,15 @@ import androidx.annotation.Nullable;
 import com.google.android.material.button.MaterialButton;
 import com.star.play.R;
 
-import xyz.doikki.videoplayer.controller.ControlWrapper;
-import xyz.doikki.videoplayer.controller.IControlComponent;
-import xyz.doikki.videoplayer.player.VideoView;
-import xyz.doikki.videoplayer.util.PlayerUtils;
+import com.star.play.controller.PlayerController;
+import com.star.play.controller.IControlComponent;
+import com.star.play.controller.PlayerConstants;
+import com.star.play.controller.PlayerUtils;
+
 
 public class StarTitleView extends FrameLayout implements IControlComponent {
 
-    private ControlWrapper mControlWrapper;
+    private PlayerController mPlayerController;
 
     private TextView mTitleView;
     private TextView mSysTimeView;
@@ -68,11 +69,11 @@ public class StarTitleView extends FrameLayout implements IControlComponent {
         mBackView = findViewById(R.id.back);
         if (mBackView != null) {
             mBackView.setOnClickListener(view -> {
-                if (mControlWrapper == null) return;
+                if (mPlayerController == null) return;
                 Activity activity = PlayerUtils.scanForActivity(getContext());
-                if (activity != null && mControlWrapper.isFullScreen()) {
+                if (activity != null && mPlayerController.isFullScreen()) {
                     activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-                    mControlWrapper.stopFullScreen();
+                    mPlayerController.stopFullScreen();
                 }
             });
         }
@@ -215,8 +216,8 @@ public class StarTitleView extends FrameLayout implements IControlComponent {
     }
 
     @Override
-    public void attach(@NonNull ControlWrapper controlWrapper) {
-        mControlWrapper = controlWrapper;
+    public void attach(@NonNull PlayerController controlWrapper) {
+        mPlayerController = controlWrapper;
     }
 
     @Nullable
@@ -227,8 +228,8 @@ public class StarTitleView extends FrameLayout implements IControlComponent {
 
     @Override
     public void onVisibilityChanged(boolean isVisible, Animation anim) {
-        if (mControlWrapper == null || !mControlWrapper.isFullScreen()) return;
-        if (mControlWrapper.isLocked()) return;
+        if (mPlayerController == null || !mPlayerController.isFullScreen()) return;
+        if (mPlayerController.isLocked()) return;
 
         if (isVisible) {
             if (getVisibility() == GONE) {
@@ -249,14 +250,14 @@ public class StarTitleView extends FrameLayout implements IControlComponent {
     @Override
     public void onPlayStateChanged(int playState) {
         switch (playState) {
-            case VideoView.STATE_IDLE:
-            case VideoView.STATE_START_ABORT:
-            case VideoView.STATE_ERROR:
-            case VideoView.STATE_PLAYBACK_COMPLETED:
+            case PlayerConstants.STATE_IDLE:
+            case PlayerConstants.STATE_START_ABORT:
+            case PlayerConstants.STATE_ERROR:
+            case PlayerConstants.STATE_PLAYBACK_COMPLETED:
                 setVisibility(GONE);
                 break;
-            case VideoView.STATE_PREPARING:
-                if (mControlWrapper != null && mControlWrapper.isFullScreen()) {
+            case PlayerConstants.STATE_PREPARING:
+                if (mPlayerController != null && mPlayerController.isFullScreen()) {
                     setVisibility(VISIBLE);
                 } else {
                     setVisibility(GONE);
@@ -267,9 +268,9 @@ public class StarTitleView extends FrameLayout implements IControlComponent {
 
     @Override
     public void onPlayerStateChanged(int playerState) {
-        if (mControlWrapper == null) return;
+        if (mPlayerController == null) return;
 
-        if (playerState == VideoView.PLAYER_FULL_SCREEN) {
+        if (playerState == PlayerConstants.PLAYER_FULL_SCREEN) {
             setVisibility(VISIBLE);
             if (mSysTimeView != null) {
                 mSysTimeView.setText(PlayerUtils.getCurrentSystemTime());
@@ -282,7 +283,7 @@ public class StarTitleView extends FrameLayout implements IControlComponent {
 
         Activity activity = PlayerUtils.scanForActivity(getContext());
         if (mTitleContainer != null) {
-            StarCutoutHelper.applyCutoutPadding(mTitleContainer, mControlWrapper, activity);
+            StarCutoutHelper.applyCutoutPadding(mTitleContainer, mPlayerController, activity);
         }
     }
 
@@ -294,7 +295,7 @@ public class StarTitleView extends FrameLayout implements IControlComponent {
         if (isLocked) {
             setVisibility(GONE);
         } else {
-            if (mControlWrapper != null && mControlWrapper.isFullScreen()) {
+            if (mPlayerController != null && mPlayerController.isFullScreen()) {
                 setVisibility(VISIBLE);
                 if (mSysTimeView != null) {
                     mSysTimeView.setText(PlayerUtils.getCurrentSystemTime());

@@ -16,10 +16,11 @@ import androidx.annotation.Nullable;
 import com.google.android.material.button.MaterialButton;
 import com.star.play.R;
 
-import xyz.doikki.videoplayer.controller.ControlWrapper;
-import xyz.doikki.videoplayer.controller.IControlComponent;
-import xyz.doikki.videoplayer.player.VideoView;
-import xyz.doikki.videoplayer.util.PlayerUtils;
+import com.star.play.controller.PlayerController;
+import com.star.play.controller.IControlComponent;
+import com.star.play.controller.PlayerConstants;
+import com.star.play.controller.PlayerUtils;
+
 
 /**
  * 播放完成界面
@@ -28,7 +29,7 @@ import xyz.doikki.videoplayer.util.PlayerUtils;
  */
 public class StarCompleteView extends FrameLayout implements IControlComponent {
 
-    private ControlWrapper mControlWrapper;          // 控制器包装类
+    private PlayerController mPlayerController;          // 控制器包装类
 
     private MaterialButton mReplayView;               // 重新播放按钮
     private ImageView mStopFullscreenView;            // 退出全屏按钮（返回箭头）
@@ -62,19 +63,19 @@ public class StarCompleteView extends FrameLayout implements IControlComponent {
 
         // 设置重新播放点击事件
         mReplayView.setOnClickListener(v -> {
-            if (mControlWrapper != null) {
-                mControlWrapper.replay(true); // 重新播放，true表示清除播放状态
+            if (mPlayerController != null) {
+                mPlayerController.replay(true); // 重新播放，true表示清除播放状态
             }
         });
 
         // 设置退出全屏点击事件
         mStopFullscreenView.setOnClickListener(v -> {
-            if (mControlWrapper != null && mControlWrapper.isFullScreen()) {
+            if (mPlayerController != null && mPlayerController.isFullScreen()) {
                 Activity activity = PlayerUtils.scanForActivity(getContext());
                 if (activity != null && !activity.isFinishing()) {
                     // 强制设置为竖屏（根据实际需求调整）
                     activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-                    mControlWrapper.stopFullScreen(); // 退出全屏模式
+                    mPlayerController.stopFullScreen(); // 退出全屏模式
                 }
             }
         });
@@ -84,8 +85,8 @@ public class StarCompleteView extends FrameLayout implements IControlComponent {
     }
 
     @Override
-    public void attach(@NonNull ControlWrapper controlWrapper) {
-        mControlWrapper = controlWrapper;
+    public void attach(@NonNull PlayerController controlWrapper) {
+        mPlayerController = controlWrapper;
     }
 
     @Nullable
@@ -102,11 +103,11 @@ public class StarCompleteView extends FrameLayout implements IControlComponent {
     @Override
     public void onPlayStateChanged(int playState) {
         // 当播放完成时显示本视图
-        if (playState == VideoView.STATE_PLAYBACK_COMPLETED) {
+        if (playState == PlayerConstants.STATE_PLAYBACK_COMPLETED) {
             setVisibility(VISIBLE);
             // 根据全屏状态显示/隐藏退出全屏按钮
-            if (mControlWrapper != null) {
-                mStopFullscreenView.setVisibility(mControlWrapper.isFullScreen() ? VISIBLE : GONE);
+            if (mPlayerController != null) {
+                mStopFullscreenView.setVisibility(mPlayerController.isFullScreen() ? VISIBLE : GONE);
             }
             // 将本视图置于顶层，避免被其他控件遮挡
             bringToFront();
@@ -118,15 +119,15 @@ public class StarCompleteView extends FrameLayout implements IControlComponent {
     @Override
     public void onPlayerStateChanged(int playerState) {
         // 根据全屏状态更新退出全屏按钮的可见性
-        if (playerState == VideoView.PLAYER_FULL_SCREEN) {
+        if (playerState == PlayerConstants.PLAYER_FULL_SCREEN) {
             mStopFullscreenView.setVisibility(VISIBLE);
-        } else if (playerState == VideoView.PLAYER_NORMAL) {
+        } else if (playerState == PlayerConstants.PLAYER_NORMAL) {
             mStopFullscreenView.setVisibility(GONE);
         }
 
         // 刘海屏适配
         Activity activity = PlayerUtils.scanForActivity(getContext());
-        StarCutoutHelper.applyCutoutMargin(mStopFullscreenView, mControlWrapper, activity);
+        StarCutoutHelper.applyCutoutMargin(mStopFullscreenView, mPlayerController, activity);
     }
 
     @Override

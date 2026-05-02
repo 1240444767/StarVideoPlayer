@@ -3,13 +3,14 @@ package com.star.play.controller;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
+import android.content.res.ColorStateList;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.FrameLayout;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
@@ -29,250 +30,139 @@ import xyz.doikki.videoplayer.util.PlayerUtils;
 
 public class StarBottomView extends FrameLayout implements IControlComponent {
 
+    // ── 外部回调接口 ──
+    public interface OnSelectClickListener       { void onClick(View view); }
+    public interface OnSpeedOptionSelectedListener{ void onSpeedOptionSelected(float speed, String speedText); }
+    public interface OnUpSetClickListener        { void onClick(View view); }
+    public interface OnDownSetClickListener      { void onClick(View view); }
+    public interface OnProgressListener          { void onProgress(); }
+    public interface OnFullscreenPortraitClickListener { void onClick(View view); }
+
+    // ── State ──
     private ControlWrapper mControlWrapper;
-
-    private TextView mCurrTimeView;
-    private TextView mTotalTimeView;
-    private TextView mTimeIndicatorView;
-    private MaterialButton mSkipPreviousView;
-    private MaterialButton mPlayView;
-    private MaterialButton mSkipNextView;
-    private MaterialButton mSpeedView;
-    private MaterialButton mSelectedWritingsView;
-    private MaterialButton mFullscreenView;
-    private MaterialButton mFullscreenPortraitView;
-    private SeekBar mSeekBar;
-    private ProgressBar mBottomProgress;
-    private View mPlayButtonsContainer;
-
     private boolean mIsDragging;
     private boolean mIsShowBottomProgress = true;
-    private boolean mIsFullScreen = false;
+    private boolean mIsFullScreen;
     private float mCurrentSpeed = 1.0f;
 
-    private int mSelectVisibility = View.GONE;
-    private int mSpeedVisibility = View.GONE;
-    private int mPreviousVisibility = View.GONE;
-    private int mNextVisibility = View.GONE;
-    private int mFullscreenVisibility = View.VISIBLE;
-    private int mFullscreenPortraitVisibility = View.GONE;
+    // ── 容器 ──
+    private View mContainerNormal, mContainerFullscreen;
+    private TextView mTimeIndicator;
+    private ProgressBar mBottomProgress;
 
-    private int mSelectVisibilityNormal = View.GONE;
-    private int mSpeedVisibilityNormal = View.GONE;
-    private int mPreviousVisibilityNormal = View.GONE;
-    private int mNextVisibilityNormal = View.GONE;
-    private int mFullscreenVisibilityNormal = View.VISIBLE;
-    private int mFullscreenPortraitVisibilityNormal = View.GONE;
+    // ── 竖屏控件 ──
+    private MaterialButton nPlay, nFullscreen, nFullscreenPortrait;
+    private TextView nCurrTime, nTotalTime;
+    private SeekBar nSeekBar;
 
-    private int mSelectVisibilityFullscreen = View.GONE;
-    private int mSpeedVisibilityFullscreen = View.GONE;
-    private int mPreviousVisibilityFullscreen = View.GONE;
-    private int mNextVisibilityFullscreen = View.GONE;
-    private int mFullscreenVisibilityFullscreen = View.VISIBLE;
-    private int mFullscreenPortraitVisibilityFullscreen = View.GONE;
+    // ── 全屏控件 ──
+    private MaterialButton fPlay, fSkipPrev, fSkipNext, fSpeed, fSelect, fFullscreen, fFullscreenPortrait;
+    private TextView fCurrTime, fTotalTime;
+    private SeekBar fSeekBar;
 
+    // ── 可见性状态 ──
+    private int mSelectVis = View.GONE, mSpeedVis = View.GONE;
+    private int mPrevVis = View.GONE, mNextVis = View.GONE;
+    private int mFullscreenVis = View.VISIBLE, mFullscreenPortraitVis = View.GONE;
+
+    private int mSelectVisN = View.GONE, mSpeedVisN = View.GONE;
+    private int mPrevVisN = View.GONE, mNextVisN = View.GONE;
+    private int mFullscreenVisN = View.VISIBLE, mFullscreenPortraitVisN = View.GONE;
+
+    private int mSelectVisF = View.GONE, mSpeedVisF = View.GONE;
+    private int mPrevVisF = View.GONE, mNextVisF = View.GONE;
+    private int mFullscreenVisF = View.VISIBLE, mFullscreenPortraitVisF = View.GONE;
+
+    // ── 回调 ──
     private OnSelectClickListener mOnSelectClickListener;
-    private OnSpeedClickListener mOnSpeedClickListener;
     private OnSpeedOptionSelectedListener mOnSpeedOptionSelectedListener;
     private OnUpSetClickListener mOnUpSetClickListener;
     private OnDownSetClickListener mOnDownSetClickListener;
     private OnProgressListener mOnProgressListener;
     private OnFullscreenPortraitClickListener mOnFullscreenPortraitClickListener;
 
-    private View mCurrentLayout;
-
-    public StarBottomView(@NonNull Context context) {
-        this(context, null);
-    }
-
-    public StarBottomView(@NonNull Context context, @Nullable AttributeSet attrs) {
-        this(context, attrs, 0);
-    }
+    public StarBottomView(@NonNull Context context)              { this(context, null); }
+    public StarBottomView(@NonNull Context c, @Nullable AttributeSet a) { this(c, a, 0); }
 
     public StarBottomView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init();
-    }
-
-    private void init() {
         setVisibility(GONE);
         LayoutInflater.from(getContext()).inflate(R.layout.star_bottom_view, this, true);
+
+        // 公共控件
+        mTimeIndicator = (TextView) findViewById(R.id.time_indicator);
         mBottomProgress = findViewById(R.id.bottom_progress);
-        if (mBottomProgress != null) {
-            mBottomProgress.setMax(1000);
-        }
-        showNormalLayout();
+        if (mBottomProgress != null) mBottomProgress.setMax(1000);
+
+        mContainerNormal = findViewById(R.id.container_normal);
+        mContainerFullscreen = findViewById(R.id.container_fullscreen);
+
+        // 竖屏引用缓存
+        nPlay               = findViewById(R.id.normal_play);
+        nCurrTime           = findViewById(R.id.normal_curr_time);
+        nTotalTime          = findViewById(R.id.normal_total_time);
+        nSeekBar            = findViewById(R.id.normal_seekbar);
+        nFullscreen         = findViewById(R.id.normal_fullscreen);
+        nFullscreenPortrait = findViewById(R.id.normal_fullscreen_portrait);
+
+        // 全屏引用缓存
+        fPlay               = findViewById(R.id.full_play);
+        fSkipPrev           = findViewById(R.id.full_skip_previous);
+        fSkipNext           = findViewById(R.id.full_skip_next);
+        fSpeed              = findViewById(R.id.full_speed);
+        fSelect             = findViewById(R.id.full_selected_writings);
+        fFullscreen         = findViewById(R.id.full_fullscreen);
+        fFullscreenPortrait = findViewById(R.id.full_fullscreen_portrait);
+        fCurrTime           = findViewById(R.id.full_curr_time);
+        fTotalTime          = findViewById(R.id.full_total_time);
+        fSeekBar            = findViewById(R.id.full_seekbar);
+
+        setupNormalListeners();
+        setupFullscreenListeners();
     }
 
-    private void showNormalLayout() {
-        View normalLayout = findViewById(R.id.layout_normal);
-        View fullscreenLayout = findViewById(R.id.layout_fullscreen);
-        if (normalLayout == null || fullscreenLayout == null) return;
-
-        normalLayout.setVisibility(VISIBLE);
-        fullscreenLayout.setVisibility(GONE);
-        mCurrentLayout = normalLayout;
-
-        bindViews(mCurrentLayout);
-        if (mFullscreenView != null) {
-            mFullscreenView.setIconResource(R.drawable.fullscreen);
-        }
+    // ═══════════════════════════════════════════════
+    // 竖屏监听（只含竖屏有的按钮）
+    // ═══════════════════════════════════════════════
+    private void setupNormalListeners() {
+        nPlay.setOnClickListener(v -> { if (mControlWrapper != null) mControlWrapper.togglePlay(); });
+        nSeekBar.setOnSeekBarChangeListener(createSeekListener(nCurrTime));
+        nFullscreen.setOnClickListener(v -> toggleFullScreen());
+        nFullscreenPortrait.setOnClickListener(v -> {
+            togglePortraitFullScreen();
+            if (mOnFullscreenPortraitClickListener != null) mOnFullscreenPortraitClickListener.onClick(v);
+        });
     }
 
-    private void showFullscreenLayout() {
-        View normalLayout = findViewById(R.id.layout_normal);
-        View fullscreenLayout = findViewById(R.id.layout_fullscreen);
-        if (normalLayout == null || fullscreenLayout == null) return;
+    // ═══════════════════════════════════════════════
+    // 全屏监听（所有按钮都有）
+    // ═══════════════════════════════════════════════
+    private void setupFullscreenListeners() {
+        fPlay.setOnClickListener(v -> { if (mControlWrapper != null) mControlWrapper.togglePlay(); });
+        fSeekBar.setOnSeekBarChangeListener(createSeekListener(fCurrTime));
 
-        normalLayout.setVisibility(GONE);
-        fullscreenLayout.setVisibility(VISIBLE);
-        mCurrentLayout = fullscreenLayout;
+        fSkipPrev.setOnClickListener(v -> { if (mOnUpSetClickListener != null) mOnUpSetClickListener.onClick(v); });
+        fSkipNext.setOnClickListener(v -> { if (mOnDownSetClickListener != null) mOnDownSetClickListener.onClick(v); });
+        fFullscreen.setOnClickListener(v -> toggleFullScreen());
+        fFullscreenPortrait.setOnClickListener(v -> {
+            togglePortraitFullScreen();
+            if (mOnFullscreenPortraitClickListener != null) mOnFullscreenPortraitClickListener.onClick(v);
+        });
 
-        bindViews(mCurrentLayout);
-        if (mFullscreenView != null) {
-            mFullscreenView.setIconResource(R.drawable.fullscreen_exit);
-        }
+        fSelect.setOnClickListener(v -> { if (mOnSelectClickListener != null) mOnSelectClickListener.onClick(v); });
+        fSpeed.setOnClickListener(v -> showSpeedPopup(v));
     }
 
-    private void bindViews(View root) {
-        mCurrTimeView = root.findViewById(R.id.curr_time);
-        mTotalTimeView = root.findViewById(R.id.total_time);
-        mTimeIndicatorView = root.findViewById(R.id.time_indicator);
-        mSeekBar = root.findViewById(R.id.seekBar);
-        mSkipPreviousView = root.findViewById(R.id.skip_previous);
-        mPlayView = root.findViewById(R.id.play);
-        mSkipNextView = root.findViewById(R.id.skip_next);
-        mSpeedView = root.findViewById(R.id.speed);
-        mSelectedWritingsView = root.findViewById(R.id.selected_writings);
-        mFullscreenView = root.findViewById(R.id.fullscreen);
-        mFullscreenPortraitView = root.findViewById(R.id.fullscreen_portrait);
-        mPlayButtonsContainer = root.findViewById(R.id.play_buttons_container);
-
-        setupClickListeners();
-        setupSeekBarListener();
-
-        if (mControlWrapper != null) {
-            updatePlayButtonIcon();
-        }
-
-        applyButtonVisibility();
-    }
-
-    private void applyButtonVisibility() {
-        int selectVisibility = mIsFullScreen ? mSelectVisibilityFullscreen : mSelectVisibilityNormal;
-        int speedVisibility = mIsFullScreen ? mSpeedVisibilityFullscreen : mSpeedVisibilityNormal;
-        int previousVisibility = mIsFullScreen ? mPreviousVisibilityFullscreen : mPreviousVisibilityNormal;
-        int nextVisibility = mIsFullScreen ? mNextVisibilityFullscreen : mNextVisibilityNormal;
-        int fullscreenVisibility = mIsFullScreen ? mFullscreenVisibilityFullscreen : mFullscreenVisibilityNormal;
-        int fullscreenPortraitVisibility = mIsFullScreen ? mFullscreenPortraitVisibilityFullscreen : mFullscreenPortraitVisibilityNormal;
-
-        if (mSelectedWritingsView != null) {
-            mSelectedWritingsView.setVisibility(selectVisibility);
-        }
-        if (mSpeedView != null) {
-            mSpeedView.setVisibility(speedVisibility);
-        }
-        if (mSkipPreviousView != null) {
-            mSkipPreviousView.setVisibility(previousVisibility);
-        }
-        if (mSkipNextView != null) {
-            mSkipNextView.setVisibility(nextVisibility);
-        }
-        if (mFullscreenView != null) {
-            mFullscreenView.setVisibility(fullscreenVisibility);
-        }
-        if (mFullscreenPortraitView != null) {
-            mFullscreenPortraitView.setVisibility(fullscreenPortraitVisibility);
-        }
-    }
-
-    private void updatePlayButtonIcon() {
-        if (mControlWrapper == null || mPlayView == null) return;
-        if (mControlWrapper.isPlaying()) {
-            mPlayView.setIconResource(R.drawable.pause);
-        } else {
-            mPlayView.setIconResource(R.drawable.play_arrow);
-        }
-    }
-
-    private void setupClickListeners() {
-        if (mPlayView != null) {
-            mPlayView.setOnClickListener(v -> {
-                if (mControlWrapper != null) mControlWrapper.togglePlay();
-            });
-        }
-
-        if (mSkipPreviousView != null) {
-            mSkipPreviousView.setOnClickListener(v -> {
-                if (mOnUpSetClickListener != null) mOnUpSetClickListener.onClick(v);
-            });
-        }
-
-        if (mSkipNextView != null) {
-            mSkipNextView.setOnClickListener(v -> {
-                if (mOnDownSetClickListener != null) mOnDownSetClickListener.onClick(v);
-            });
-        }
-
-        if (mSpeedView != null) {
-            mSpeedView.setOnClickListener(v -> {
-                PopupMenu popup = new PopupMenu(getContext(), v);
-                popup.getMenuInflater().inflate(R.menu.popup_menu_speed, popup.getMenu());
-                Menu menu = popup.getMenu();
-                for (int i = 0; i < menu.size(); i++) {
-                    MenuItem item = menu.getItem(i);
-                    String speedText = item.getTitle().toString();
-                    float speed = parseSpeedText(speedText);
-                    if (Math.abs(speed - mCurrentSpeed) < 0.01f) {
-                        item.setChecked(true);
-                        break;
-                    }
-                }
-                popup.setOnMenuItemClickListener(item -> {
-                    String speedText = item.getTitle().toString();
-                    float speed = parseSpeedText(speedText);
-                    mCurrentSpeed = speed;
-                    if (mOnSpeedOptionSelectedListener != null) {
-                        mOnSpeedOptionSelectedListener.onSpeedOptionSelected(speed, speedText);
-                    }
-                    return true;
-                });
-                popup.show();
-            });
-        }
-
-        if (mSelectedWritingsView != null) {
-            mSelectedWritingsView.setOnClickListener(v -> {
-                if (mOnSelectClickListener != null) mOnSelectClickListener.onClick(v);
-            });
-        }
-
-        if (mFullscreenView != null) {
-            mFullscreenView.setOnClickListener(v -> toggleFullScreen());
-        }
-
-        if (mFullscreenPortraitView != null) {
-            mFullscreenPortraitView.setOnClickListener(v -> {
-                togglePortraitFullScreen();
-                if (mOnFullscreenPortraitClickListener != null) {
-                    mOnFullscreenPortraitClickListener.onClick(v);
-                }
-            });
-        }
-    }
-
-    private void setupSeekBarListener() {
-        if (mSeekBar == null) return;
-
-        mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+    private SeekBar.OnSeekBarChangeListener createSeekListener(TextView currTimeView) {
+        return new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser && mControlWrapper != null && mCurrTimeView != null) {
+                if (fromUser && mControlWrapper != null) {
                     long duration = mControlWrapper.getDuration();
                     long seekPos = (long) (duration * progress / 1000f);
-                    mCurrTimeView.setText(PlayerUtils.stringForTime((int) seekPos));
-                    if (mTimeIndicatorView != null) {
-                        mTimeIndicatorView.setText(PlayerUtils.stringForTime((int) seekPos));
+                    currTimeView.setText(PlayerUtils.stringForTime((int) seekPos));
+                    if (mTimeIndicator != null) {
+                        mTimeIndicator.setText(PlayerUtils.stringForTime((int) seekPos));
                         updateTimeIndicatorPosition(seekBar);
                     }
                 }
@@ -285,9 +175,7 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
                     mControlWrapper.stopProgress();
                     mControlWrapper.stopFadeOut();
                 }
-                if (mTimeIndicatorView != null) {
-                    mTimeIndicatorView.setVisibility(View.VISIBLE);
-                }
+                if (mTimeIndicator != null) mTimeIndicator.setVisibility(View.VISIBLE);
             }
 
             @Override
@@ -300,43 +188,45 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
                     mControlWrapper.startProgress();
                     mControlWrapper.startFadeOut();
                 }
-                if (mTimeIndicatorView != null) {
-                    mTimeIndicatorView.setVisibility(View.GONE);
-                }
+                if (mTimeIndicator != null) mTimeIndicator.setVisibility(View.GONE);
             }
-        });
+        };
     }
 
+    private void showSpeedPopup(View anchor) {
+        PopupMenu popup = new PopupMenu(getContext(), anchor);
+        popup.getMenuInflater().inflate(R.menu.popup_menu_speed, popup.getMenu());
+        Menu menu = popup.getMenu();
+        for (int i = 0; i < menu.size(); i++) {
+            MenuItem item = menu.getItem(i);
+            if (Math.abs(parseSpeedText(item.getTitle().toString()) - mCurrentSpeed) < 0.01f) {
+                item.setChecked(true);
+                break;
+            }
+        }
+        popup.setOnMenuItemClickListener(item -> {
+            float speed = parseSpeedText(item.getTitle().toString());
+            mCurrentSpeed = speed;
+            if (mOnSpeedOptionSelectedListener != null) {
+                mOnSpeedOptionSelectedListener.onSpeedOptionSelected(speed, item.getTitle().toString());
+            }
+            return true;
+        });
+        popup.show();
+    }
+
+    private float parseSpeedText(String text) {
+        try { return Float.parseFloat(text.replace("x", "").replace("X", "")); }
+        catch (NumberFormatException e) { return 1.0f; }
+    }
+
+    // ═══════════════════════════════════════════════
+    // 全屏切换
+    // ═══════════════════════════════════════════════
     private void toggleFullScreen() {
         if (mControlWrapper == null) return;
         Activity activity = PlayerUtils.scanForActivity(getContext());
         mControlWrapper.toggleFullScreen(activity);
-    }
-
-    private void updateTimeIndicatorPosition(SeekBar seekBar) {
-        if (mTimeIndicatorView == null || seekBar == null) return;
-
-        int seekBarWidth = seekBar.getWidth();
-        if (seekBarWidth == 0) return;
-
-        float progress = seekBar.getProgress() / (float) seekBar.getMax();
-
-        int[] seekBarLocation = new int[2];
-        seekBar.getLocationOnScreen(seekBarLocation);
-
-        int[] thisLocation = new int[2];
-        getLocationOnScreen(thisLocation);
-
-        float thumbScreenX = seekBarLocation[0] + progress * seekBarWidth;
-        float indicatorX = thumbScreenX - thisLocation[0];
-
-        int indicatorWidth = mTimeIndicatorView.getWidth();
-        int indicatorHeight = mTimeIndicatorView.getHeight();
-
-        int indicatorY = seekBarLocation[1] - thisLocation[1] - indicatorHeight - 10;
-
-        mTimeIndicatorView.setX(indicatorX - indicatorWidth / 2);
-        mTimeIndicatorView.setY(indicatorY);
     }
 
     private void togglePortraitFullScreen() {
@@ -348,383 +238,183 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
         mControlWrapper.startFullScreen();
     }
 
-    public interface OnSelectClickListener {
-        void onClick(View view);
+    private void updateTimeIndicatorPosition(SeekBar seekBar) {
+        if (mTimeIndicator == null || seekBar.getWidth() == 0) return;
+
+        float progress = seekBar.getProgress() / (float) seekBar.getMax();
+        int[] barLoc = new int[2], selfLoc = new int[2];
+        seekBar.getLocationOnScreen(barLoc);
+        getLocationOnScreen(selfLoc);
+
+        float thumbX = barLoc[0] + progress * seekBar.getWidth();
+        float indicatorX = thumbX - selfLoc[0];
+
+        mTimeIndicator.setX(indicatorX - mTimeIndicator.getWidth() / 2f);
+        mTimeIndicator.setY(barLoc[1] - selfLoc[1] - mTimeIndicator.getHeight() - 10);
     }
 
-    public interface OnSpeedClickListener {
-        void onClick(View view);
-    }
+    // ═══════════════════════════════════════════════
+    // 可见性
+    // ═══════════════════════════════════════════════
+    private void applyButtonVisibility() {
+        int sv = mIsFullScreen ? mSelectVisF : mSelectVisN;
+        int spv = mIsFullScreen ? mSpeedVisF : mSpeedVisN;
+        int pv = mIsFullScreen ? mPrevVisF : mPrevVisN;
+        int nv = mIsFullScreen ? mNextVisF : mNextVisN;
+        int fv = mIsFullScreen ? mFullscreenVisF : mFullscreenVisN;
+        int fpv = mIsFullScreen ? mFullscreenPortraitVisF : mFullscreenPortraitVisN;
 
-    public interface OnSpeedOptionSelectedListener {
-        void onSpeedOptionSelected(float speed, String speedText);
-    }
-
-    public interface OnUpSetClickListener {
-        void onClick(View view);
-    }
-
-    public interface OnDownSetClickListener {
-        void onClick(View view);
-    }
-
-    public interface OnProgressListener {
-        void onProgress();
-    }
-
-    public interface OnFullscreenPortraitClickListener {
-        void onClick(View view);
-    }
-
-    public void setOnSelectClickListener(OnSelectClickListener listener) {
-        mOnSelectClickListener = listener;
-    }
-
-    public void setOnSpeedClickListener(OnSpeedClickListener listener) {
-        mOnSpeedClickListener = listener;
-    }
-
-    public void setOnSpeedOptionSelectedListener(OnSpeedOptionSelectedListener listener) {
-        mOnSpeedOptionSelectedListener = listener;
-    }
-
-    public void setOnUpSetClickListener(OnUpSetClickListener listener) {
-        mOnUpSetClickListener = listener;
-    }
-
-    public void setOnDownSetClickListener(OnDownSetClickListener listener) {
-        mOnDownSetClickListener = listener;
-    }
-
-    public void setOnProgressListener(OnProgressListener listener) {
-        mOnProgressListener = listener;
-    }
-
-    public void setOnFullscreenPortraitClickListener(OnFullscreenPortraitClickListener listener) {
-        mOnFullscreenPortraitClickListener = listener;
-    }
-
-    private float parseSpeedText(String speedText) {
-        try {
-            String numStr = speedText.replace("x", "").replace("X", "");
-            return Float.parseFloat(numStr);
-        } catch (NumberFormatException e) {
-            return 1.0f;
-        }
-    }
-
-    public void showBottomProgress(boolean isShow) {
-        mIsShowBottomProgress = isShow;
-        if (!isShow && mBottomProgress != null) {
-            mBottomProgress.setVisibility(GONE);
-        }
-    }
-
-    public void setShowBottomProgress(boolean isShow) {
-        showBottomProgress(isShow);
-    }
-
-    public void setBottomButtonsVisibility(int selectVisibility, int speedVisibility, 
-                                           int previousVisibility, int nextVisibility) {
-        setBottomButtonsVisibilityNormal(selectVisibility, speedVisibility, previousVisibility, nextVisibility);
-        setBottomButtonsVisibilityFullscreen(selectVisibility, speedVisibility, previousVisibility, nextVisibility);
-        applyButtonVisibility();
-    }
-
-    public void setBottomButtonsVisibility(int selectVisibility, int speedVisibility, 
-                                           int previousVisibility, int nextVisibility,
-                                           int fullscreenVisibility, int fullscreenPortraitVisibility) {
-        setBottomButtonsVisibilityNormal(selectVisibility, speedVisibility, previousVisibility, 
-                nextVisibility, fullscreenVisibility, fullscreenPortraitVisibility);
-        setBottomButtonsVisibilityFullscreen(selectVisibility, speedVisibility, previousVisibility, 
-                nextVisibility, fullscreenVisibility, fullscreenPortraitVisibility);
-        applyButtonVisibility();
-    }
-
-    public void setBottomButtonsVisibilityNormal(int selectVisibility, int speedVisibility, 
-                                                 int previousVisibility, int nextVisibility) {
-        mSelectVisibilityNormal = selectVisibility;
-        mSpeedVisibilityNormal = speedVisibility;
-        mPreviousVisibilityNormal = previousVisibility;
-        mNextVisibilityNormal = nextVisibility;
-        if (!mIsFullScreen) {
-            applyButtonVisibility();
-        }
-    }
-
-    public void setBottomButtonsVisibilityNormal(int selectVisibility, int speedVisibility, 
-                                                 int previousVisibility, int nextVisibility,
-                                                 int fullscreenVisibility, int fullscreenPortraitVisibility) {
-        mSelectVisibilityNormal = selectVisibility;
-        mSpeedVisibilityNormal = speedVisibility;
-        mPreviousVisibilityNormal = previousVisibility;
-        mNextVisibilityNormal = nextVisibility;
-        mFullscreenVisibilityNormal = fullscreenVisibility;
-        mFullscreenPortraitVisibilityNormal = fullscreenPortraitVisibility;
-        if (!mIsFullScreen) {
-            applyButtonVisibility();
-        }
-    }
-
-    public void setBottomButtonsVisibilityFullscreen(int selectVisibility, int speedVisibility, 
-                                                     int previousVisibility, int nextVisibility) {
-        mSelectVisibilityFullscreen = selectVisibility;
-        mSpeedVisibilityFullscreen = speedVisibility;
-        mPreviousVisibilityFullscreen = previousVisibility;
-        mNextVisibilityFullscreen = nextVisibility;
         if (mIsFullScreen) {
-            applyButtonVisibility();
+            fSelect.setVisibility(sv);
+            fSpeed.setVisibility(spv);
+            fSkipPrev.setVisibility(pv);
+            fSkipNext.setVisibility(nv);
+            fFullscreen.setVisibility(fv);
+            fFullscreenPortrait.setVisibility(fpv);
+        } else {
+            nFullscreen.setVisibility(fv);
+            nFullscreenPortrait.setVisibility(fpv);
         }
     }
 
-    public void setBottomButtonsVisibilityFullscreen(int selectVisibility, int speedVisibility, 
-                                                     int previousVisibility, int nextVisibility,
-                                                     int fullscreenVisibility, int fullscreenPortraitVisibility) {
-        mSelectVisibilityFullscreen = selectVisibility;
-        mSpeedVisibilityFullscreen = speedVisibility;
-        mPreviousVisibilityFullscreen = previousVisibility;
-        mNextVisibilityFullscreen = nextVisibility;
-        mFullscreenVisibilityFullscreen = fullscreenVisibility;
-        mFullscreenPortraitVisibilityFullscreen = fullscreenPortraitVisibility;
-        if (mIsFullScreen) {
-            applyButtonVisibility();
-        }
-    }
-
-    public void setBottomButtonsVisibilityAll(int selectNormal, int speedNormal, int previousNormal, int nextNormal,
-                                              int fullscreenNormal, int fullscreenPortraitNormal,
-                                              int selectFullscreen, int speedFullscreen, int previousFullscreen, int nextFullscreen,
-                                              int fullscreenFullscreen, int fullscreenPortraitFullscreen) {
-        mSelectVisibilityNormal = selectNormal;
-        mSpeedVisibilityNormal = speedNormal;
-        mPreviousVisibilityNormal = previousNormal;
-        mNextVisibilityNormal = nextNormal;
-        mFullscreenVisibilityNormal = fullscreenNormal;
-        mFullscreenPortraitVisibilityNormal = fullscreenPortraitNormal;
-
-        mSelectVisibilityFullscreen = selectFullscreen;
-        mSpeedVisibilityFullscreen = speedFullscreen;
-        mPreviousVisibilityFullscreen = previousFullscreen;
-        mNextVisibilityFullscreen = nextFullscreen;
-        mFullscreenVisibilityFullscreen = fullscreenFullscreen;
-        mFullscreenPortraitVisibilityFullscreen = fullscreenPortraitFullscreen;
+    // ── 批量设置 ──
+    public void setBottomButtonsVisibility(int sel, int spd, int prev, int next) {
+        setBottomButtonsVisibilityNormal(sel, spd, prev, next);
+        setBottomButtonsVisibilityFullscreen(sel, spd, prev, next);
         applyButtonVisibility();
     }
 
-    public void setSelectButtonVisibility(int visibility) {
-        setSelectButtonVisibilityNormal(visibility);
-        setSelectButtonVisibilityFullscreen(visibility);
+    public void setBottomButtonsVisibility(int sel, int spd, int prev, int next, int full, int fullPortrait) {
+        setBottomButtonsVisibilityNormal(sel, spd, prev, next, full, fullPortrait);
+        setBottomButtonsVisibilityFullscreen(sel, spd, prev, next, full, fullPortrait);
         applyButtonVisibility();
     }
 
-    public void setSelectButtonVisibilityNormal(int visibility) {
-        mSelectVisibilityNormal = visibility;
-        if (!mIsFullScreen && mSelectedWritingsView != null) {
-            mSelectedWritingsView.setVisibility(visibility);
-        }
+    public void setBottomButtonsVisibilityNormal(int sel, int spd, int prev, int next) {
+        mSelectVisN = sel; mSpeedVisN = spd; mPrevVisN = prev; mNextVisN = next;
+        if (!mIsFullScreen) applyButtonVisibility();
     }
 
-    public void setSelectButtonVisibilityFullscreen(int visibility) {
-        mSelectVisibilityFullscreen = visibility;
-        if (mIsFullScreen && mSelectedWritingsView != null) {
-            mSelectedWritingsView.setVisibility(visibility);
-        }
+    public void setBottomButtonsVisibilityNormal(int sel, int spd, int prev, int next, int full, int fullPortrait) {
+        mSelectVisN = sel; mSpeedVisN = spd; mPrevVisN = prev; mNextVisN = next;
+        mFullscreenVisN = full; mFullscreenPortraitVisN = fullPortrait;
+        if (!mIsFullScreen) applyButtonVisibility();
     }
 
-    public void setSpeedButtonVisibility(int visibility) {
-        setSpeedButtonVisibilityNormal(visibility);
-        setSpeedButtonVisibilityFullscreen(visibility);
+    public void setBottomButtonsVisibilityFullscreen(int sel, int spd, int prev, int next) {
+        mSelectVisF = sel; mSpeedVisF = spd; mPrevVisF = prev; mNextVisF = next;
+        if (mIsFullScreen) applyButtonVisibility();
+    }
+
+    public void setBottomButtonsVisibilityFullscreen(int sel, int spd, int prev, int next, int full, int fullPortrait) {
+        mSelectVisF = sel; mSpeedVisF = spd; mPrevVisF = prev; mNextVisF = next;
+        mFullscreenVisF = full; mFullscreenPortraitVisF = fullPortrait;
+        if (mIsFullScreen) applyButtonVisibility();
+    }
+
+    public void setBottomButtonsVisibilityAll(int selN, int spdN, int prevN, int nextN, int fullN, int fullPN,
+                                              int selF, int spdF, int prevF, int nextF, int fullF, int fullPF) {
+        mSelectVisN = selN; mSpeedVisN = spdN; mPrevVisN = prevN; mNextVisN = nextN;
+        mFullscreenVisN = fullN; mFullscreenPortraitVisN = fullPN;
+        mSelectVisF = selF; mSpeedVisF = spdF; mPrevVisF = prevF; mNextVisF = nextF;
+        mFullscreenVisF = fullF; mFullscreenPortraitVisF = fullPF;
         applyButtonVisibility();
     }
 
-    public void setSpeedButtonVisibilityNormal(int visibility) {
-        mSpeedVisibilityNormal = visibility;
-        if (!mIsFullScreen && mSpeedView != null) {
-            mSpeedView.setVisibility(visibility);
+    // ── 单独按钮 — 全局 ──
+    public void setSelectButtonVisibility(int v)            { setSelectButtonVisibilityNormal(v); setSelectButtonVisibilityFullscreen(v); }
+    public void setSpeedButtonVisibility(int v)              { setSpeedButtonVisibilityNormal(v);   setSpeedButtonVisibilityFullscreen(v); }
+    public void setPreviousButtonVisibility(int v)           { setPreviousButtonVisibilityNormal(v); setPreviousButtonVisibilityFullscreen(v); }
+    public void setNextButtonVisibility(int v)               { setNextButtonVisibilityNormal(v);     setNextButtonVisibilityFullscreen(v); }
+    public void setFullscreenButtonVisibility(int v)         { setFullscreenButtonVisibilityNormal(v); setFullscreenButtonVisibilityFullscreen(v); }
+    public void setFullscreenPortraitButtonVisibility(int v) { setFullscreenPortraitButtonVisibilityNormal(v); setFullscreenPortraitButtonVisibilityFullscreen(v); }
+
+    // ── 单独按钮 — Normal ──
+    public void setSelectButtonVisibilityNormal(int v)            { mSelectVisN = v;            if (!mIsFullScreen) nFullscreen.setVisibility(v); } // normal has no select button, ignore
+    public void setSpeedButtonVisibilityNormal(int v)              { mSpeedVisN = v;             /* normal has no speed button */ }
+    public void setPreviousButtonVisibilityNormal(int v)           { mPrevVisN = v;              /* normal has no prev button */ }
+    public void setNextButtonVisibilityNormal(int v)               { mNextVisN = v;              /* normal has no next button */ }
+    public void setFullscreenButtonVisibilityNormal(int v)         { mFullscreenVisN = v;        if (!mIsFullScreen) nFullscreen.setVisibility(v); }
+    public void setFullscreenPortraitButtonVisibilityNormal(int v) { mFullscreenPortraitVisN = v;if (!mIsFullScreen) nFullscreenPortrait.setVisibility(v); }
+
+    // ── 单独按钮 — Fullscreen ──
+    public void setSelectButtonVisibilityFullscreen(int v)            { mSelectVisF = v;            if (mIsFullScreen) fSelect.setVisibility(v); }
+    public void setSpeedButtonVisibilityFullscreen(int v)              { mSpeedVisF = v;             if (mIsFullScreen) fSpeed.setVisibility(v); }
+    public void setPreviousButtonVisibilityFullscreen(int v)           { mPrevVisF = v;              if (mIsFullScreen) fSkipPrev.setVisibility(v); }
+    public void setNextButtonVisibilityFullscreen(int v)               { mNextVisF = v;              if (mIsFullScreen) fSkipNext.setVisibility(v); }
+    public void setFullscreenButtonVisibilityFullscreen(int v)         { mFullscreenVisF = v;        if (mIsFullScreen) fFullscreen.setVisibility(v); }
+    public void setFullscreenPortraitButtonVisibilityFullscreen(int v) { mFullscreenPortraitVisF = v;if (mIsFullScreen) fFullscreenPortrait.setVisibility(v); }
+
+    public void setCurrentSpeed(float speed) { mCurrentSpeed = speed; }
+    public void setShowBottomProgress(boolean show) { mIsShowBottomProgress = show; }
+
+    private int mLastBufferedPercent;
+
+    public void setBufferedProgress(int percent) {
+        if (percent <= 0) {
+            percent = mLastBufferedPercent;
+        } else {
+            mLastBufferedPercent = percent;
+        }
+        int sp = Math.min(percent, 100) * 10;
+        nSeekBar.setSecondaryProgress(sp);
+        fSeekBar.setSecondaryProgress(sp);
+        if (mBottomProgress != null) {
+            mBottomProgress.setSecondaryProgress(percent >= 95 ? mBottomProgress.getMax() : percent * 10);
         }
     }
 
-    public void setSpeedButtonVisibilityFullscreen(int visibility) {
-        mSpeedVisibilityFullscreen = visibility;
-        if (mIsFullScreen && mSpeedView != null) {
-            mSpeedView.setVisibility(visibility);
-        }
-    }
-
-    public void setSpeedButtonText(String text) {
-        if (mSpeedView != null) {
-            mSpeedView.setText(text);
-        }
-    }
-
-    public void setCurrentSpeed(float speed) {
-        mCurrentSpeed = speed;
-    }
-
+    // ── 颜色 ──
     public void setTimeTextColor(int color) {
-        if (mCurrTimeView != null) {
-            mCurrTimeView.setTextColor(color);
-        }
-        if (mTotalTimeView != null) {
-            mTotalTimeView.setTextColor(color);
-        }
+        nCurrTime.setTextColor(color); nTotalTime.setTextColor(color);
+        fCurrTime.setTextColor(color); fTotalTime.setTextColor(color);
     }
 
     public void setButtonIconTint(int color) {
-        if (mSkipPreviousView != null) {
-            mSkipPreviousView.setIconTint(android.content.res.ColorStateList.valueOf(color));
-        }
-        if (mPlayView != null) {
-            mPlayView.setIconTint(android.content.res.ColorStateList.valueOf(color));
-        }
-        if (mSkipNextView != null) {
-            mSkipNextView.setIconTint(android.content.res.ColorStateList.valueOf(color));
-        }
-        if (mSpeedView != null) {
-            mSpeedView.setIconTint(android.content.res.ColorStateList.valueOf(color));
-        }
-        if (mSelectedWritingsView != null) {
-            mSelectedWritingsView.setIconTint(android.content.res.ColorStateList.valueOf(color));
-        }
-        if (mFullscreenView != null) {
-            mFullscreenView.setIconTint(android.content.res.ColorStateList.valueOf(color));
-        }
-        if (mFullscreenPortraitView != null) {
-            mFullscreenPortraitView.setIconTint(android.content.res.ColorStateList.valueOf(color));
-        }
+        ColorStateList tint = ColorStateList.valueOf(color);
+        nPlay.setIconTint(tint); nFullscreen.setIconTint(tint); nFullscreenPortrait.setIconTint(tint);
+        fPlay.setIconTint(tint); fSkipPrev.setIconTint(tint); fSkipNext.setIconTint(tint);
+        fSpeed.setIconTint(tint); fSelect.setIconTint(tint);
+        fFullscreen.setIconTint(tint); fFullscreenPortrait.setIconTint(tint);
     }
 
     public void setBottomContainerBackground(int color) {
-        if (mCurrentLayout != null) {
-            mCurrentLayout.setBackgroundColor(color);
-        }
+        mContainerNormal.setBackgroundColor(color);
+        mContainerFullscreen.setBackgroundColor(color);
     }
 
-    public void setPreviousButtonVisibility(int visibility) {
-        setPreviousButtonVisibilityNormal(visibility);
-        setPreviousButtonVisibilityFullscreen(visibility);
-        applyButtonVisibility();
-    }
+    // ── 回调设置 ──
+    public void setOnSelectClickListener(OnSelectClickListener l)            { mOnSelectClickListener = l; }
+    public void setOnSpeedOptionSelectedListener(OnSpeedOptionSelectedListener l) { mOnSpeedOptionSelectedListener = l; }
+    public void setOnUpSetClickListener(OnUpSetClickListener l)              { mOnUpSetClickListener = l; }
+    public void setOnDownSetClickListener(OnDownSetClickListener l)          { mOnDownSetClickListener = l; }
+    public void setOnProgressListener(OnProgressListener l)                  { mOnProgressListener = l; }
+    public void setOnFullscreenPortraitClickListener(OnFullscreenPortraitClickListener l) { mOnFullscreenPortraitClickListener = l; }
 
-    public void setPreviousButtonVisibilityNormal(int visibility) {
-        mPreviousVisibilityNormal = visibility;
-        if (!mIsFullScreen && mSkipPreviousView != null) {
-            mSkipPreviousView.setVisibility(visibility);
-        }
-    }
-
-    public void setPreviousButtonVisibilityFullscreen(int visibility) {
-        mPreviousVisibilityFullscreen = visibility;
-        if (mIsFullScreen && mSkipPreviousView != null) {
-            mSkipPreviousView.setVisibility(visibility);
-        }
-    }
-
-    public void setNextButtonVisibility(int visibility) {
-        setNextButtonVisibilityNormal(visibility);
-        setNextButtonVisibilityFullscreen(visibility);
-        applyButtonVisibility();
-    }
-
-    public void setNextButtonVisibilityNormal(int visibility) {
-        mNextVisibilityNormal = visibility;
-        if (!mIsFullScreen && mSkipNextView != null) {
-            mSkipNextView.setVisibility(visibility);
-        }
-    }
-
-    public void setNextButtonVisibilityFullscreen(int visibility) {
-        mNextVisibilityFullscreen = visibility;
-        if (mIsFullScreen && mSkipNextView != null) {
-            mSkipNextView.setVisibility(visibility);
-        }
-    }
-
-    public void setFullscreenButtonVisibility(int visibility) {
-        setFullscreenButtonVisibilityNormal(visibility);
-        setFullscreenButtonVisibilityFullscreen(visibility);
-        applyButtonVisibility();
-    }
-
-    public void setFullscreenButtonVisibilityNormal(int visibility) {
-        mFullscreenVisibilityNormal = visibility;
-        if (!mIsFullScreen && mFullscreenView != null) {
-            mFullscreenView.setVisibility(visibility);
-        }
-    }
-
-    public void setFullscreenButtonVisibilityFullscreen(int visibility) {
-        mFullscreenVisibilityFullscreen = visibility;
-        if (mIsFullScreen && mFullscreenView != null) {
-            mFullscreenView.setVisibility(visibility);
-        }
-    }
-
-    public void setFullscreenPortraitButtonVisibility(int visibility) {
-        setFullscreenPortraitButtonVisibilityNormal(visibility);
-        setFullscreenPortraitButtonVisibilityFullscreen(visibility);
-        applyButtonVisibility();
-    }
-
-    public void setFullscreenPortraitButtonVisibilityNormal(int visibility) {
-        mFullscreenPortraitVisibilityNormal = visibility;
-        if (!mIsFullScreen && mFullscreenPortraitView != null) {
-            mFullscreenPortraitView.setVisibility(visibility);
-        }
-    }
-
-    public void setFullscreenPortraitButtonVisibilityFullscreen(int visibility) {
-        mFullscreenPortraitVisibilityFullscreen = visibility;
-        if (mIsFullScreen && mFullscreenPortraitView != null) {
-            mFullscreenPortraitView.setVisibility(visibility);
-        }
-    }
-
-    @Override
-    public void attach(@NonNull ControlWrapper controlWrapper) {
-        mControlWrapper = controlWrapper;
-    }
-
-    @Nullable
-    @Override
-    public View getView() {
-        return this;
-    }
+    // ═══════════════════════════════════════════════
+    // IControlComponent
+    // ═══════════════════════════════════════════════
+    @Override public void attach(@NonNull ControlWrapper w) { mControlWrapper = w; }
+    @Nullable @Override public View getView() { return this; }
 
     @Override
     public void onVisibilityChanged(boolean isVisible, Animation anim) {
-        if (mCurrentLayout == null) return;
-
-        if (isVisible) {
-            mCurrentLayout.setVisibility(VISIBLE);
-            if (anim != null) {
-                mCurrentLayout.startAnimation(anim);
-            }
-            if (mIsShowBottomProgress && mBottomProgress != null) {
-                mBottomProgress.setVisibility(GONE);
-            }
-            if (mIsFullScreen && mPlayButtonsContainer != null) {
-                mPlayButtonsContainer.setVisibility(VISIBLE);
-                if (anim != null) {
-                    mPlayButtonsContainer.startAnimation(anim);
-                }
-            }
+        if (mIsFullScreen) {
+            mContainerFullscreen.setVisibility(isVisible ? VISIBLE : GONE);
+            if (anim != null) mContainerFullscreen.startAnimation(anim);
         } else {
-            mCurrentLayout.setVisibility(GONE);
-            if (anim != null) {
-                mCurrentLayout.startAnimation(anim);
-            }
-            if (mIsShowBottomProgress && mBottomProgress != null) {
+            mContainerNormal.setVisibility(isVisible ? VISIBLE : GONE);
+            if (anim != null) mContainerNormal.startAnimation(anim);
+        }
+
+        if (mIsShowBottomProgress && mBottomProgress != null) {
+            if (isVisible) {
+                mBottomProgress.setVisibility(GONE);
+            } else {
                 mBottomProgress.setVisibility(VISIBLE);
                 AlphaAnimation fadeIn = new AlphaAnimation(0f, 1f);
                 fadeIn.setDuration(300);
                 mBottomProgress.startAnimation(fadeIn);
-            }
-            if (mIsFullScreen && mPlayButtonsContainer != null) {
-                mPlayButtonsContainer.setVisibility(GONE);
-                if (anim != null) {
-                    mPlayButtonsContainer.startAnimation(anim);
-                }
             }
         }
     }
@@ -735,79 +425,69 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
             case VideoView.STATE_IDLE:
             case VideoView.STATE_PLAYBACK_COMPLETED:
                 setVisibility(GONE);
-                if (mBottomProgress != null) {
-                    mBottomProgress.setProgress(0);
-                    mBottomProgress.setSecondaryProgress(0);
-                }
-                if (mSeekBar != null) mSeekBar.setProgress(0);
-                if (mPlayView != null) mPlayView.setIconResource(R.drawable.play_arrow);
+                if (mBottomProgress != null) { mBottomProgress.setProgress(0); mBottomProgress.setSecondaryProgress(0); }
+                nSeekBar.setProgress(0); fSeekBar.setProgress(0);
+                nPlay.setIconResource(R.drawable.play_arrow);
+                fPlay.setIconResource(R.drawable.play_arrow);
                 break;
             case VideoView.STATE_START_ABORT:
             case VideoView.STATE_ERROR:
                 setVisibility(GONE);
-                if (mPlayView != null) mPlayView.setIconResource(R.drawable.play_arrow);
+                nPlay.setIconResource(R.drawable.play_arrow);
+                fPlay.setIconResource(R.drawable.play_arrow);
                 break;
             case VideoView.STATE_PREPARING:
-                if (mPlayView != null) mPlayView.setIconResource(R.drawable.pause);
+                nPlay.setIconResource(R.drawable.pause);
+                fPlay.setIconResource(R.drawable.pause);
                 if (mIsFullScreen) {
                     setVisibility(VISIBLE);
-                    if (mCurrentLayout != null) mCurrentLayout.setVisibility(VISIBLE);
-                    if (mPlayButtonsContainer != null) {
-                        mPlayButtonsContainer.setVisibility(VISIBLE);
-                    }
+                    mContainerFullscreen.setVisibility(VISIBLE);
+
                 } else {
                     setVisibility(GONE);
                 }
                 break;
             case VideoView.STATE_PREPARED:
-                if (mPlayView != null) mPlayView.setIconResource(R.drawable.play_arrow);
+                nPlay.setIconResource(R.drawable.play_arrow);
+                fPlay.setIconResource(R.drawable.play_arrow);
                 if (mIsFullScreen) {
                     setVisibility(VISIBLE);
-                    if (mCurrentLayout != null) mCurrentLayout.setVisibility(VISIBLE);
-                    if (mPlayButtonsContainer != null) {
-                        mPlayButtonsContainer.setVisibility(VISIBLE);
-                    }
+                    mContainerFullscreen.setVisibility(VISIBLE);
+
                 }
                 break;
             case VideoView.STATE_PLAYING:
-                if (mPlayView != null) mPlayView.setIconResource(R.drawable.pause);
+                nPlay.setIconResource(R.drawable.pause);
+                fPlay.setIconResource(R.drawable.pause);
                 if (mIsFullScreen) {
                     setVisibility(VISIBLE);
-                    if (mCurrentLayout != null) mCurrentLayout.setVisibility(VISIBLE);
-                    if (mPlayButtonsContainer != null) {
-                        mPlayButtonsContainer.setVisibility(VISIBLE);
-                    }
-                    if (mIsShowBottomProgress && mBottomProgress != null) {
-                        mBottomProgress.setVisibility(GONE);
-                    }
+                    mContainerFullscreen.setVisibility(VISIBLE);
+
+                    if (mIsShowBottomProgress && mBottomProgress != null) mBottomProgress.setVisibility(GONE);
                 } else {
                     if (mIsShowBottomProgress) {
-                        if (mControlWrapper != null && mControlWrapper.isShowing()) {
-                            if (mBottomProgress != null) mBottomProgress.setVisibility(GONE);
-                            if (mCurrentLayout != null) mCurrentLayout.setVisibility(VISIBLE);
-                        } else {
-                            if (mBottomProgress != null) mBottomProgress.setVisibility(VISIBLE);
-                            if (mCurrentLayout != null) mCurrentLayout.setVisibility(VISIBLE);
-                        }
+                        boolean ctrlShowing = mControlWrapper != null && mControlWrapper.isShowing();
+                        if (mBottomProgress != null) mBottomProgress.setVisibility(ctrlShowing ? GONE : VISIBLE);
+                        mContainerNormal.setVisibility(VISIBLE);
                     } else {
-                        if (mCurrentLayout != null) mCurrentLayout.setVisibility(GONE);
+                        mContainerNormal.setVisibility(GONE);
                     }
                     setVisibility(VISIBLE);
                 }
                 if (mControlWrapper != null) mControlWrapper.startProgress();
                 break;
             case VideoView.STATE_PAUSED:
-                if (mPlayView != null) mPlayView.setIconResource(R.drawable.play_arrow);
+                nPlay.setIconResource(R.drawable.play_arrow);
+                fPlay.setIconResource(R.drawable.play_arrow);
                 break;
             case VideoView.STATE_BUFFERING:
-                if (mPlayView != null) mPlayView.setIconResource(R.drawable.pause);
+                nPlay.setIconResource(R.drawable.pause);
+                fPlay.setIconResource(R.drawable.pause);
                 if (mControlWrapper != null) mControlWrapper.stopProgress();
                 break;
             case VideoView.STATE_BUFFERED:
-                if (mPlayView != null) {
-                    mPlayView.setIconResource(mControlWrapper != null && mControlWrapper.isPlaying() ?
-                            R.drawable.pause : R.drawable.play_arrow);
-                }
+                nPlay.setIconResource(mControlWrapper != null && mControlWrapper.isPlaying() ? R.drawable.pause : R.drawable.play_arrow);
+                fPlay.setIconResource(mControlWrapper != null && mControlWrapper.isPlaying() ? R.drawable.pause : R.drawable.play_arrow);
                 if (mControlWrapper != null) mControlWrapper.startProgress();
                 break;
         }
@@ -817,53 +497,36 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
     public void onPlayerStateChanged(int playerState) {
         if (playerState == VideoView.PLAYER_FULL_SCREEN) {
             mIsFullScreen = true;
-            showFullscreenLayout();
-            if (mControlWrapper != null && mControlWrapper.isShowing() && mPlayButtonsContainer != null) {
-                mPlayButtonsContainer.setVisibility(VISIBLE);
-            }
+            mContainerNormal.setVisibility(GONE);
+            mContainerFullscreen.setVisibility(VISIBLE);
+            applyButtonVisibility();
         } else {
             mIsFullScreen = false;
-            if (mPlayButtonsContainer != null) {
-                mPlayButtonsContainer.setVisibility(GONE);
-            }
-            showNormalLayout();
+            mContainerFullscreen.setVisibility(GONE);
+            mContainerNormal.setVisibility(VISIBLE);
+            applyButtonVisibility();
         }
     }
 
     @Override
     public void setProgress(int duration, int position) {
         if (mIsDragging) return;
-
-        if (mOnProgressListener != null) {
-            mOnProgressListener.onProgress();
-        }
+        if (mOnProgressListener != null) mOnProgressListener.onProgress();
 
         if (duration > 0) {
-            float progress = (float) position / duration * 1000;
-            progress = Math.max(0, Math.min(1000, progress));
-            if (mSeekBar != null) mSeekBar.setProgress((int) progress);
+            float progress = Math.max(0, Math.min(1000, (float) position / duration * 1000));
+            nSeekBar.setProgress((int) progress);
+            fSeekBar.setProgress((int) progress);
             if (mBottomProgress != null) mBottomProgress.setProgress((int) progress);
-
-            if (mControlWrapper != null) {
-                int bufferedPercent = mControlWrapper.getBufferedPercentage();
-                if (mBottomProgress != null) {
-                    if (bufferedPercent >= 95) {
-                        mBottomProgress.setSecondaryProgress(mBottomProgress.getMax());
-                    } else {
-                        mBottomProgress.setSecondaryProgress(bufferedPercent * 10);
-                    }
-                }
-            }
         } else {
-            if (mSeekBar != null) mSeekBar.setProgress(0);
-            if (mBottomProgress != null) {
-                mBottomProgress.setProgress(0);
-                mBottomProgress.setSecondaryProgress(0);
-            }
+            nSeekBar.setProgress(0); fSeekBar.setProgress(0);
+            if (mBottomProgress != null) { mBottomProgress.setProgress(0); mBottomProgress.setSecondaryProgress(0); }
         }
 
-        if (mTotalTimeView != null) mTotalTimeView.setText(PlayerUtils.stringForTime(duration));
-        if (mCurrTimeView != null) mCurrTimeView.setText(PlayerUtils.stringForTime(position));
+        nTotalTime.setText(PlayerUtils.stringForTime(duration));
+        fTotalTime.setText(PlayerUtils.stringForTime(duration));
+        nCurrTime.setText(PlayerUtils.stringForTime(position));
+        fCurrTime.setText(PlayerUtils.stringForTime(position));
     }
 
     @Override

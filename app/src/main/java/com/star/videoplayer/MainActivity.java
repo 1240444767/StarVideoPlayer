@@ -38,6 +38,7 @@ import xyz.doikki.videoplayer.ijk.IjkPlayerFactory;
 public class MainActivity extends AppCompatActivity {
     private StarVideoPlayer videoView;
     private  String URL = "https://vv.jisuzyv.com/play/negox6je/index.m3u8";
+//    private  String URL = "https://video-player-mp4-1253865537.cos.ap-guan没有gzhou.myqcloud.com/Assassin%27s%20Creed%20Shadows.mp4";
     private ArrayList<HashMap<String, Object>> episodeItems = new ArrayList<>();
     private final ActivityResultLauncher<String[]> castPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {

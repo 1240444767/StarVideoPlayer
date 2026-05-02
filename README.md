@@ -6,7 +6,7 @@
 
 ## 功能特性
 
-- **播放内核** — 支持 ExoPlayer、IJKPlayer，用户自行选择引入
+- **播放内核** — 默认 ExoPlayer 内核，可通过 `setPlayerFactory()` 切换为 IJKPlayer 等自定义内核
 - **选集功能** — 剧集列表展示与快速切换，支持默认适配器、自定义适配器、完全自定义内容面板
 - **倍速播放** — 点击倍速按钮弹出菜单选择（0.5x ~ 3.0x）
 - **长按倍速** — 长按屏幕快速播放（默认 3 倍速，可自定义 1.0x ~ 10.0x）
@@ -49,9 +49,8 @@ dependencyResolutionManagement {
 ```groovy
 dependencies {
     implementation 'xyz.doikki.android.dkplayer:dkplayer-java:3.3.7'
-    // 根据需要选择播放内核（二选一或都引入）
-    implementation 'xyz.doikki.android.dkplayer:player-exo:3.3.7'   // ExoPlayer
-    // implementation 'xyz.doikki.android.dkplayer:player-ijk:3.3.7'  // IJKPlayer
+    implementation 'xyz.doikki.android.dkplayer:player-exo:3.3.7'   // ExoPlayer（默认内核，必须引入）
+    // implementation 'xyz.doikki.android.dkplayer:player-ijk:3.3.7'  // IJKPlayer（可选，切换内核时需要）
     implementation 'com.github.1240444767:StarVideoPlayer:2.0.0'
 }
 ```
@@ -94,9 +93,7 @@ public class MainActivity extends AppCompatActivity {
 
         videoView = findViewById(R.id.player);
 
-        // 必须设置播放内核（根据你引入的依赖选择）
-        videoView.setPlayerFactory(ExoMediaPlayerFactory.create());   // ExoPlayer
-        // videoView.setPlayerFactory(IjkPlayerFactory.create());     // IJKPlayer
+        // 默认已使用 ExoPlayer 内核，无需手动设置
 
         // 设置视频地址和标题
         videoView.setUrl("https://example.com/video.mp4");
@@ -139,15 +136,27 @@ public class MainActivity extends AppCompatActivity {
 
 ```java
 StarShortDramaPlayer videoView = findViewById(R.id.player);
-videoView.setPlayerFactory(ExoMediaPlayerFactory.create());
+// 默认已使用 ExoPlayer 内核
 videoView.setUrl("https://example.com/video.m3u8");
 videoView.addDefaultControlComponent("短剧标题", false);
 videoView.start();
 ```
 
+### 5. 切换播放内核
+
+默认使用 ExoPlayer。如需切换到 IJKPlayer 或其他内核，在 `start()` 之前调用：
+
+```java
+videoView.setPlayerFactory(IjkPlayerFactory.create());   // 覆盖默认的 ExoPlayer
+videoView.setUrl("https://example.com/video.mp4");
+videoView.start();
+```
+
+**注意：** 切换内核需要确保对应的依赖已引入（如 `player-ijk:3.3.7`）。
+
 ---
 
-### 5. 播放控制
+### 6. 播放控制
 
 ```java
 // 倍速（通过底部倍速按钮弹出菜单选择，支持 0.5x ~ 3.0x）
@@ -196,7 +205,7 @@ boolean autoNext = videoView.isAutoNext();
 
 ---
 
-### 6. 选集功能
+### 7. 选集功能
 
 #### 方式一：默认适配器
 
@@ -260,7 +269,7 @@ int index = videoView.getCurrentEpisodeIndex();
 
 ---
 
-### 7. 上一集 / 下一集
+### 8. 上一集 / 下一集
 
 ```java
 videoView.setOnUpSetClickListener(view -> {
@@ -280,7 +289,7 @@ videoView.setOnDownSetClickListener(view -> {
 
 ---
 
-### 8. 监听器
+### 9. 监听器
 
 ```java
 // 小窗按钮（画中画）
@@ -306,7 +315,7 @@ videoView.setOnFullscreenPortraitClickListener(view -> { /* 额外操作 */ });
 
 ---
 
-### 9. 按钮可见性控制
+### 10. 按钮可见性控制
 
 所有方法接受 `View.VISIBLE`、`View.GONE` 或 `View.INVISIBLE`。
 
@@ -361,7 +370,7 @@ videoView.setSysTimeVisibility(visibility);
 
 ---
 
-### 10. 颜色自定义
+### 11. 颜色自定义
 
 ```java
 // 标题栏
@@ -378,7 +387,7 @@ videoView.setBottomButtonIconTint(Color.WHITE);     // 底部按钮图标
 
 ---
 
-### 11. 设置面板控制
+### 12. 设置面板控制
 
 ```java
 videoView.showSettingsPanel();
@@ -396,7 +405,7 @@ boolean open = videoView.isSettingsPanelShowing();
 
 | 方法 | 说明 |
 |------|------|
-| `setPlayerFactory(PlayerFactory factory)` | 设置播放内核（必须调用） |
+| `setPlayerFactory(PlayerFactory factory)` | 设置播放内核（默认 ExoPlayer，可选覆盖） |
 | `setUrl(String url)` | 设置视频地址 |
 | `addDefaultControlComponent(String title, boolean isLive)` | 设置标题并初始化控制器 |
 | `start()` | 开始播放 |

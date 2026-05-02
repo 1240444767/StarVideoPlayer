@@ -1,19 +1,260 @@
+<?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- 竖屏布局 -->
-    <include
-        android:id="@+id/layout_normal"
-        layout="@layout/star_bottom_view_normal"
-        android:visibility="gone" />
+    <!-- 拖动时间指示气泡 -->
+    <TextView
+        android:id="@+id/time_indicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_time_indicator"
+        android:paddingStart="8dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="4dp"
+        android:textColor="@android:color/white"
+        android:textSize="12sp"
+        android:visibility="gone"
+        tools:text="01:23" />
 
-    <!-- 全屏布局 -->
-    <include
-        android:id="@+id/layout_fullscreen"
-        layout="@layout/star_bottom_view_full"
-        android:visibility="gone" />
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- 竖屏容器                                     -->
+    <!-- ═══════════════════════════════════════════ -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/container_normal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@drawable/bg_bottom">
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/normal_play"
+            style="?attr/materialIconButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="0dp"
+            app:icon="@drawable/play_arrow"
+            app:iconSize="24dp"
+            app:iconTint="?attr/colorPrimary"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <TextView
+            android:id="@+id/normal_curr_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:textSize="12sp"
+            tools:text="00:00"
+            app:layout_constraintStart_toEndOf="@id/normal_play"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <SeekBar
+            android:id="@+id/normal_seekbar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="@null"
+            android:max="1000"
+            android:maxHeight="5dp"
+            android:minHeight="5dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:progressDrawable="@drawable/dkplayer_layer_progress_bar"
+            android:thumb="@drawable/dkplayer_seekbar_thumb"
+            android:thumbOffset="0dp"
+            app:layout_constraintStart_toEndOf="@id/normal_curr_time"
+            app:layout_constraintEnd_toStartOf="@id/normal_total_time"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <TextView
+            android:id="@+id/normal_total_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#BBFFFFFF"
+            android:textSize="12sp"
+            tools:text="00:00"
+            app:layout_constraintEnd_toStartOf="@id/normal_fullscreen_portrait"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/normal_fullscreen_portrait"
+            style="?attr/materialIconButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="visible"
+            app:icon="@drawable/fullscreen_portrait"
+            app:iconSize="24dp"
+            app:iconTint="?attr/colorPrimary"
+            app:layout_constraintEnd_toStartOf="@id/normal_fullscreen"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/normal_fullscreen"
+            style="?attr/materialIconButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:icon="@drawable/fullscreen"
+            app:iconSize="24dp"
+            app:iconTint="?attr/colorPrimary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- 全屏容器                                     -->
+    <!-- ═══════════════════════════════════════════ -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/container_fullscreen"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:paddingHorizontal="10dp"
+        android:paddingBottom="4dp"
+        android:background="@drawable/bg_bottom"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/full_curr_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="8dp"
+            android:textColor="#fff"
+            android:textSize="12sp"
+            tools:text="00:00"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <TextView
+            android:id="@+id/full_total_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="8dp"
+            android:textColor="#ffffff"
+            android:textSize="12sp"
+            tools:text="00:00"
+            app:layout_constraintStart_toEndOf="@id/full_curr_time"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <SeekBar
+            android:id="@+id/full_seekbar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="@null"
+            android:max="1000"
+            android:maxHeight="4dp"
+            android:minHeight="4dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:progressDrawable="@drawable/dkplayer_layer_progress_bar"
+            android:thumb="@drawable/dkplayer_seekbar_thumb"
+            android:thumbOffset="0dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/full_total_time"
+            app:layout_constraintBottom_toTopOf="@id/full_play" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/full_skip_previous"
+            style="?attr/materialIconButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:icon="@drawable/skip_previous"
+            app:iconSize="24dp"
+            app:iconTint="?attr/colorPrimary"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/full_play"
+            app:layout_constraintTop_toBottomOf="@id/full_seekbar"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/full_play"
+            style="?attr/materialIconButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:icon="@drawable/play_arrow"
+            app:iconSize="24dp"
+            app:iconTint="?attr/colorPrimary"
+            app:layout_constraintStart_toEndOf="@id/full_skip_previous"
+            app:layout_constraintEnd_toStartOf="@id/full_skip_next"
+            app:layout_constraintTop_toBottomOf="@id/full_seekbar"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/full_skip_next"
+            style="?attr/materialIconButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:icon="@drawable/skip_next"
+            app:iconSize="24dp"
+            app:iconTint="?attr/colorPrimary"
+            app:layout_constraintStart_toEndOf="@id/full_play"
+            app:layout_constraintTop_toBottomOf="@id/full_seekbar"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/full_speed"
+            style="?attr/materialIconButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:icon="@drawable/speed"
+            app:iconSize="24dp"
+            app:iconTint="?attr/colorPrimary"
+            app:layout_constraintEnd_toStartOf="@id/full_selected_writings"
+            app:layout_constraintTop_toTopOf="@id/full_fullscreen"
+            app:layout_constraintBottom_toBottomOf="@id/full_fullscreen" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/full_selected_writings"
+            style="?attr/materialIconButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:icon="@drawable/animated_images"
+            app:iconSize="24dp"
+            app:iconTint="?attr/colorPrimary"
+            app:layout_constraintEnd_toStartOf="@id/full_fullscreen_portrait"
+            app:layout_constraintTop_toBottomOf="@id/full_seekbar"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/full_fullscreen_portrait"
+            style="?attr/materialIconButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:icon="@drawable/fullscreen_portrait"
+            app:iconSize="24dp"
+            app:iconTint="?attr/colorPrimary"
+            app:layout_constraintEnd_toStartOf="@id/full_fullscreen"
+            app:layout_constraintTop_toBottomOf="@id/full_seekbar"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/full_fullscreen"
+            style="?attr/materialIconButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:icon="@drawable/fullscreen_exit"
+            app:iconSize="24dp"
+            app:iconTint="?attr/colorPrimary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/full_seekbar"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- 底部常驻进度条 -->
     <ProgressBar
         android:id="@+id/bottom_progress"
         style="?android:attr/progressBarStyleHorizontal"
@@ -23,4 +264,5 @@
         android:max="1000"
         android:progressDrawable="@drawable/dkplayer_layer_progress_bar"
         android:visibility="visible" />
+
 </FrameLayout>

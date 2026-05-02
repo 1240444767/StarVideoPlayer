@@ -25,6 +25,7 @@ import com.star.play.controller.StarTitleView;
 
 import java.util.Locale;
 
+import xyz.doikki.videoplayer.exo.ExoMediaPlayerFactory;
 import xyz.doikki.videoplayer.player.VideoView;
 
 public class StarVideoPlayer extends VideoView {
@@ -118,6 +119,7 @@ public class StarVideoPlayer extends VideoView {
     }
 
     private void init(AttributeSet attrs) {
+        setPlayerFactory(ExoMediaPlayerFactory.create());
         mSettings = new StarPlayerSettings(getContext());
 
         loadSettings();
@@ -274,6 +276,8 @@ public class StarVideoPlayer extends VideoView {
             if (skipEndMs > 0 && (getDuration() - getCurrentPosition()) <= skipEndMs) {
                 seekTo(getDuration());
             }
+
+            mBottomView.setBufferedProgress(getBufferedPercentage());
         });
     }
 

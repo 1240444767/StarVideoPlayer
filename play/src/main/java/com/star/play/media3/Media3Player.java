@@ -1,5 +1,6 @@
 package com.star.play.media3;
 
+import android.annotation.SuppressLint;
 import android.content.res.AssetFileDescriptor;
 import android.view.Surface;
 import android.view.SurfaceHolder;
@@ -12,6 +13,7 @@ import androidx.media3.common.VideoSize;
 import androidx.media3.exoplayer.DefaultLoadControl;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.exoplayer.LoadControl;
+import androidx.media3.exoplayer.analytics.PlayerId;
 import androidx.media3.exoplayer.hls.HlsMediaSource;
 import androidx.media3.exoplayer.source.MediaSource;
 import androidx.media3.exoplayer.source.ProgressiveMediaSource;
@@ -29,6 +31,8 @@ import java.util.Map;
  * <p>
  * Aggressive buffering: max 1-hour buffer, continues loading even when paused.
  */
+
+@SuppressLint("UnsafeOptInUsageError")
 public class Media3Player extends AbstractPlayer implements Player.Listener {
 
     @Nullable
@@ -238,9 +242,10 @@ public class Media3Player extends AbstractPlayer implements Player.Listener {
                     .build();
         }
 
+
         @Override
-        public Allocator getAllocator() {
-            return mDelegate.getAllocator();
+        public Allocator getAllocator(PlayerId playerId) {
+            return mDelegate.getAllocator(playerId);
         }
 
         @Override

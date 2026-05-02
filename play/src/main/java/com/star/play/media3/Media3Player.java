@@ -100,7 +100,10 @@ public class Media3Player extends AbstractPlayer implements Player.Listener {
 
     @Override
     public void prepareAsync() {
-        if (mPlayer != null) mPlayer.prepare();
+        if (mPlayer != null) {
+            mPlayer.prepare();
+            mPlayer.play();
+        }
     }
 
     @Override
@@ -191,6 +194,7 @@ public class Media3Player extends AbstractPlayer implements Player.Listener {
                 if (mPlayerEventListener != null) {
                     mPlayerEventListener.onPrepared();
                     mPlayerEventListener.onInfo(MEDIA_INFO_BUFFERING_END, 0);
+                    mPlayerEventListener.onInfo(MEDIA_INFO_RENDERING_START, 0);
                 }
                 break;
             case Player.STATE_BUFFERING:

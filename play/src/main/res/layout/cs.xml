@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <LinearLayout
+        android:id="@+id/center_container"
+        android:layout_width="250dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.Material3.CardView.Elevated"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:cardElevation="0dp"
+            app:cardCornerRadius="24dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:gravity="center" >
+                <com.google.android.material.button.MaterialButton
+                    style="?attr/materialIconButtonFilledStyle"
+                    android:id="@+id/iv_icon"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    app:icon="@drawable/volume_up" />
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/pro_percent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:trackHeight="32dp"/>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+    <LinearLayout
+    android:id="@+id/center_container1"
+    android:layout_width="250dp"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center_horizontal"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:visibility="gone"
+    tools:visibility="visible">
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.Material3.CardView.Elevated"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:cardElevation="0dp"
+            app:cardCornerRadius="24dp">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="12dp">
+
+                <!-- 图标按钮 -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_volume"
+                    style="?attr/materialIconButtonFilledStyle"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    app:icon="@drawable/skip_previous"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <!-- 时间增量 -->
+                <TextView
+                    android:id="@+id/tv_time_offset"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="?attr/colorPrimary"
+                    app:layout_constraintBottom_toTopOf="@id/tv_progress"
+                    app:layout_constraintStart_toEndOf="@id/btn_volume"
+                    app:layout_constraintTop_toTopOf="@id/btn_volume"
+                    tools:text="+ 00:00" />
+
+                <!-- 当前进度 / 总时长 -->
+                <TextView
+                    android:id="@+id/tv_progress"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="?attr/colorPrimary"
+                    app:layout_constraintBottom_toBottomOf="@id/btn_volume"
+                    app:layout_constraintStart_toEndOf="@id/btn_volume"
+                    app:layout_constraintTop_toBottomOf="@id/tv_time_offset"
+                    tools:text="当前时间 / 视频时长" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+</LinearLayout>
+</FrameLayout>

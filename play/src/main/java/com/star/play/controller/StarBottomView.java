@@ -346,7 +346,12 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
     public void setFullscreenPortraitButtonVisibilityFullscreen(int v) { mFullscreenPortraitVisF = v;if (mIsFullScreen) fFullscreenPortrait.setVisibility(v); }
 
     public void setCurrentSpeed(float speed) { mCurrentSpeed = speed; }
-    public void setShowBottomProgress(boolean show) { mIsShowBottomProgress = show; }
+    public void setShowBottomProgress(boolean show) {
+        mIsShowBottomProgress = show;
+        if (!show && mBottomProgress != null) {
+            mBottomProgress.setVisibility(GONE);
+        }
+    }
 
     /** 直接应用 BottomBarConfig，Fluent API 入口 */
     public void applyConfig(com.star.play.BottomBarConfig c) {
@@ -404,21 +409,29 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
     @Override
     public void onVisibilityChanged(boolean isVisible, Animation anim) {
         if (mIsFullScreen) {
-            mContainerFullscreen.setVisibility(isVisible ? VISIBLE : GONE);
-            if (anim != null) mContainerFullscreen.startAnimation(anim);
+            int target = isVisible ? VISIBLE : GONE;
+            if (mContainerFullscreen.getVisibility() != target) {
+                mContainerFullscreen.setVisibility(target);
+                if (anim != null) mContainerFullscreen.startAnimation(anim);
+            }
         } else {
-            mContainerNormal.setVisibility(isVisible ? VISIBLE : GONE);
-            if (anim != null) mContainerNormal.startAnimation(anim);
+            int target = isVisible ? VISIBLE : GONE;
+            if (mContainerNormal.getVisibility() != target) {
+                mContainerNormal.setVisibility(target);
+                if (anim != null) mContainerNormal.startAnimation(anim);
+            }
         }
 
         if (mIsShowBottomProgress && mBottomProgress != null) {
             if (isVisible) {
                 mBottomProgress.setVisibility(GONE);
             } else {
-                mBottomProgress.setVisibility(VISIBLE);
-                AlphaAnimation fadeIn = new AlphaAnimation(0f, 1f);
-                fadeIn.setDuration(300);
-                mBottomProgress.startAnimation(fadeIn);
+                if (mBottomProgress.getVisibility() != VISIBLE) {
+                    mBottomProgress.setVisibility(VISIBLE);
+                    AlphaAnimation fadeIn = new AlphaAnimation(0f, 1f);
+                    fadeIn.setDuration(300);
+                    mBottomProgress.startAnimation(fadeIn);
+                }
             }
         }
     }
@@ -443,30 +456,18 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
             case VideoView.STATE_PREPARING:
                 nPlay.setIconResource(R.drawable.pause);
                 fPlay.setIconResource(R.drawable.pause);
-                if (mIsFullScreen) {
-                    setVisibility(VISIBLE);
-                    mContainerFullscreen.setVisibility(VISIBLE);
-
-                } else {
+                if (!mIsFullScreen) {
                     setVisibility(GONE);
                 }
                 break;
             case VideoView.STATE_PREPARED:
                 nPlay.setIconResource(R.drawable.play_arrow);
                 fPlay.setIconResource(R.drawable.play_arrow);
-                if (mIsFullScreen) {
-                    setVisibility(VISIBLE);
-                    mContainerFullscreen.setVisibility(VISIBLE);
-
-                }
                 break;
             case VideoView.STATE_PLAYING:
                 nPlay.setIconResource(R.drawable.pause);
                 fPlay.setIconResource(R.drawable.pause);
                 if (mIsFullScreen) {
-                    setVisibility(VISIBLE);
-                    mContainerFullscreen.setVisibility(VISIBLE);
-
                     if (mIsShowBottomProgress && mBottomProgress != null) mBottomProgress.setVisibility(GONE);
                 } else {
                     if (mIsShowBottomProgress) {
@@ -501,13 +502,18 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
     public void onPlayerStateChanged(int playerState) {
         if (playerState == VideoView.PLAYER_FULL_SCREEN) {
             mIsFullScreen = true;
+            if (mControlWrapper == null || !mControlWrapper.isLocked()) {
+                setVisibility(VISIBLE);
+                mContainerFullscreen.setVisibility(VISIBLE);
+            }
             mContainerNormal.setVisibility(GONE);
-            mContainerFullscreen.setVisibility(VISIBLE);
             applyButtonVisibility();
         } else {
             mIsFullScreen = false;
+            boolean inPlayback = mControlWrapper != null && mControlWrapper.isPlaying();
+            setVisibility(inPlayback ? VISIBLE : GONE);
             mContainerFullscreen.setVisibility(GONE);
-            mContainerNormal.setVisibility(VISIBLE);
+            mContainerNormal.setVisibility(inPlayback ? VISIBLE : GONE);
             applyButtonVisibility();
         }
     }

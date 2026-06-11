@@ -60,42 +60,60 @@
     </LinearLayout>
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
+        android:layout_marginTop="40dp"
         android:id="@+id/speed_layout"
-        android:layout_marginLeft="60dp"
-        android:layout_marginRight="60dp"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:visibility="gone">
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:visibility="visible">
 
         <com.google.android.material.card.MaterialCardView
-            app:cardBackgroundColor="@android:color/transparent"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:cardCornerRadius="20dp"
+            style="@style/Widget.Material3.CardView.Elevated"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             app:cardElevation="0dp"
-            android:layout_margin="20dp"
-            app:cardMaxElevation="0dp">
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:gravity="center" >
+            app:cardCornerRadius="60dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="3.0x"
-                    android:textColor="@color/cardview_light_background"
-                    android:textSize="16dp"
-                    android:padding="5dp"
-                    android:layout_marginLeft="5dp"
-                    android:layout_marginRight="5dp"
-                    android:id="@+id/speed_text"/>
-            </LinearLayout>
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="12dp">
 
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_seek_icon"
+                        style="?attr/materialIconButtonFilledStyle"
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+                        app:icon="@drawable/speed"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/speed_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="?attr/colorPrimary"
+                        android:textSize="20sp"
+                        app:layout_constraintBottom_toTopOf="@id/tv_speed_d"
+                        app:layout_constraintStart_toEndOf="@id/btn_seek_icon"
+                        app:layout_constraintTop_toTopOf="@id/btn_seek_icon"
+                        android:text="3.0x" />
+
+                    <TextView
+                        android:id="@+id/tv_speed_d"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="倍速播放"
+                        android:textColor="?attr/colorPrimary"
+                        android:textSize="14sp"
+                        app:layout_constraintBottom_toBottomOf="@id/btn_seek_icon"
+                        app:layout_constraintStart_toEndOf="@id/btn_seek_icon"
+                        app:layout_constraintTop_toBottomOf="@id/speed_text" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>

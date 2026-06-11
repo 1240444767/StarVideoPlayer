@@ -35,7 +35,7 @@
             android:singleLine="true"
             android:textColor="@android:color/white"
             android:textSize="16sp"
-            tools:text="这是一个标题" />
+            android:text="这是一个标题" />
 
         <com.google.android.material.button.MaterialButton
             style="?attr/materialIconButtonStyle"
@@ -71,7 +71,7 @@
             android:layout_marginEnd="14dp"
             android:layout_marginRight="14dp"
             android:textColor="@android:color/white"
-            tools:text="12:00" />
+            android:text="12:00" />
 
     </LinearLayout>
 

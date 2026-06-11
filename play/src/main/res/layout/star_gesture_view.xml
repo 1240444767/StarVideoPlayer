@@ -21,7 +21,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:cardElevation="0dp"
-            app:cardCornerRadius="24dp">
+            app:cardCornerRadius="60dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -66,7 +66,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:cardElevation="0dp"
-            app:cardCornerRadius="24dp">
+            app:cardCornerRadius="60dp">
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
@@ -104,7 +104,7 @@
                         app:layout_constraintBottom_toTopOf="@id/tv_progress"
                         app:layout_constraintStart_toEndOf="@id/btn_seek_icon"
                         app:layout_constraintTop_toTopOf="@id/btn_seek_icon"
-                        tools:text="+ 00:00" />
+                        android:text="+ 00:00" />
 
                     <TextView
                         android:id="@+id/tv_progress"
@@ -115,7 +115,7 @@
                         app:layout_constraintBottom_toBottomOf="@id/btn_seek_icon"
                         app:layout_constraintStart_toEndOf="@id/btn_seek_icon"
                         app:layout_constraintTop_toBottomOf="@id/tv_time_offset"
-                        tools:text="当前时间 / 视频时长" />
+                        android:text="当前时间 / 视频时长" />
 
 
                 </androidx.constraintlayout.widget.ConstraintLayout>

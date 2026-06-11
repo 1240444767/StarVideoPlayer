@@ -18,7 +18,7 @@
         android:textColor="@android:color/white"
         android:textSize="12sp"
         android:visibility="gone"
-        tools:text="01:23" />
+        android:text="01:23" />
 
     <!-- ═══════════════════════════════════════════ -->
     <!-- 竖屏容器                                     -->
@@ -50,7 +50,7 @@
             android:layout_height="wrap_content"
             android:textColor="@android:color/white"
             android:textSize="12sp"
-            tools:text="00:00"
+            android:text="00:00"
             app:layout_constraintStart_toEndOf="@id/normal_play"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent" />
@@ -79,7 +79,7 @@
             android:layout_height="wrap_content"
             android:textColor="#BBFFFFFF"
             android:textSize="12sp"
-            tools:text="00:00"
+            android:text="00:00"
             app:layout_constraintEnd_toStartOf="@id/normal_fullscreen_portrait"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent" />
@@ -130,7 +130,7 @@
             android:layout_marginHorizontal="16dp"
             android:textColor="#fff"
             android:textSize="12sp"
-            tools:text="00:00"
+            android:text="00:00"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent" />
@@ -142,7 +142,7 @@
             android:layout_marginHorizontal="8dp"
             android:textColor="#ffffff"
             android:textSize="12sp"
-            tools:text="00:00"
+            android:text="00:00"
             app:layout_constraintStart_toEndOf="@id/full_curr_time"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent" />
@@ -153,8 +153,8 @@
             android:layout_height="wrap_content"
             android:background="@null"
             android:max="1000"
-            android:maxHeight="4dp"
-            android:minHeight="4dp"
+            android:maxHeight="6dp"
+            android:minHeight="6dp"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
             android:progressDrawable="@drawable/dkplayer_layer_progress_bar"

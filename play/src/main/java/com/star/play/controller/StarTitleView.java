@@ -256,9 +256,7 @@ public class StarTitleView extends FrameLayout implements IControlComponent {
                 setVisibility(GONE);
                 break;
             case VideoView.STATE_PREPARING:
-                if (mControlWrapper != null && mControlWrapper.isFullScreen()) {
-                    setVisibility(VISIBLE);
-                } else {
+                if (mControlWrapper == null || !mControlWrapper.isFullScreen()) {
                     setVisibility(GONE);
                 }
                 break;
@@ -270,7 +268,7 @@ public class StarTitleView extends FrameLayout implements IControlComponent {
         if (mControlWrapper == null) return;
 
         if (playerState == VideoView.PLAYER_FULL_SCREEN) {
-            setVisibility(VISIBLE);
+            if (!mControlWrapper.isLocked()) setVisibility(VISIBLE);
             if (mSysTimeView != null) {
                 mSysTimeView.setText(PlayerUtils.getCurrentSystemTime());
             }

@@ -212,10 +212,12 @@ public class StarStandardVideoController extends GestureVideoController implemen
         super.onPlayerStateChanged(playerState);
         switch (playerState) {
             case VideoView.PLAYER_NORMAL:
+                mShowing = true;
                 mLockButton.setVisibility(GONE);
                 break;
             case VideoView.PLAYER_FULL_SCREEN:
-                mLockButton.setVisibility(isShowing() ? VISIBLE : GONE);
+                show();
+                mLockButton.setVisibility(VISIBLE);
                 break;
         }
 
@@ -243,13 +245,14 @@ public class StarStandardVideoController extends GestureVideoController implemen
                 }
                 if (!mIsBuffering) {
                     mLoadingIndicator.setVisibility(GONE);
+                    if (playState == VideoView.STATE_PLAYING
+                            && mControlWrapper != null && !mControlWrapper.isFullScreen()) {
+                        mShowing = true;
+                    }
                 }
                 break;
             case VideoView.STATE_PREPARING:
                 mLoadingIndicator.setVisibility(VISIBLE);
-                if (mControlWrapper != null && mControlWrapper.isFullScreen()) {
-                    show();
-                }
                 break;
             case VideoView.STATE_BUFFERING:
                 mLoadingIndicator.setVisibility(VISIBLE);

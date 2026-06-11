@@ -171,7 +171,7 @@ public class StarVideoPlayer extends VideoView {
         mSettingsView.setOnSkipEndChangeListener((p, t) -> mSettings.setSkipEndProgress(p));
 
         // ── 长按倍速 ──
-        mController.setOnSpeedListener(() -> { setSpeed(mLongPressSpeed); mController.setSpeedLayoutVisibility(android.view.View.VISIBLE); boolean same = Math.abs(mLongPressSpeed - mCurrentSpeed) < 0.01f; mController.setSpeedText(same ? "已经是 " + mLongPressSpeedText + " 倍速" : mLongPressSpeedText + " 倍速中"); });
+        mController.setOnSpeedListener(() -> { setSpeed(mLongPressSpeed); mController.setSpeedLayoutVisibility(android.view.View.VISIBLE); boolean same = Math.abs(mLongPressSpeed - mCurrentSpeed) < 0.01f; mController.setSpeedText(same ? "已经是 " + mLongPressSpeedText + " 倍速" : mLongPressSpeedText); });
         mController.setOnCancelSpeedListener(() -> { setSpeed(mCurrentSpeed); mController.setSpeedLayoutVisibility(android.view.View.GONE); });
     }
 

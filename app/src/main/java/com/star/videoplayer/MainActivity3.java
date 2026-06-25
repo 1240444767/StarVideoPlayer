@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import xyz.doikki.videoplayer.exo.ExoMediaPlayerFactory;
+import com.star.play.StarVideoPlayer;
 
 /**
  * 测试页面：多播放源 + 自定义选集面板
@@ -65,7 +65,6 @@ public class MainActivity3 extends AppCompatActivity {
      */
     private void initPlayer() {
         videoView = findViewById(R.id.player);
-        videoView.setPlayerFactory(ExoMediaPlayerFactory.create());
 
         // 设置第一个播放源第一集
         VideoSource source = videoSources.get(0);

@@ -19,8 +19,26 @@ import com.star.play.controller.StarSettingsView;
 import com.star.play.controller.StarTitleView;
 import java.util.Locale;
 
-import xyz.doikki.videoplayer.exo.ExoMediaPlayerFactory;
+import com.google.android.exoplayer2.DefaultLoadControl;
+import com.google.android.exoplayer2.database.StandaloneDatabaseProvider;
+import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSource;
+import com.google.android.exoplayer2.upstream.cache.LeastRecentlyUsedCacheEvictor;
+import com.google.android.exoplayer2.upstream.cache.SimpleCache;
+import com.google.android.exoplayer2.util.Util;
+import xyz.doikki.videoplayer.exo.ExoMediaPlayer;
+import xyz.doikki.videoplayer.exo.ExoMediaSourceHelper;
+import xyz.doikki.videoplayer.player.PlayerFactory;
 import xyz.doikki.videoplayer.player.VideoView;
+
+import java.lang.reflect.Field;
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.Dispatcher;
+import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
+import okhttp3.Request;
+
+import java.util.Arrays;
 
 public class StarVideoPlayer extends VideoView {
 
@@ -82,7 +100,30 @@ public class StarVideoPlayer extends VideoView {
     }
 
     private void init(AttributeSet attrs) {
-        setPlayerFactory(ExoMediaPlayerFactory.create());
+        setPlayerFactory(new PlayerFactory<ExoMediaPlayer>() {
+            @Override
+            public ExoMediaPlayer createPlayer(Context context) {
+                setupDiskCache(context);
+                injectOkHttp(context);
+                ExoMediaPlayer player = new ExoMediaPlayer(context) {
+                    @Override
+                    public void setDataSource(String url, java.util.Map<String, String> headers) {
+                        mMediaSource = mMediaSourceHelper.getMediaSource(url, headers, true);
+                    }
+                };
+                DefaultLoadControl loadControl = new DefaultLoadControl.Builder()
+                        .setBufferDurationsMs(
+                                30_000,   // minBufferMs — 始终保留 30s 缓冲垫
+                                1_800_000,// maxBufferMs — 允许缓冲 30 分钟（短剧/电影基本覆盖全片）
+                                5_000,    // bufferForPlaybackMs — 缓冲 5s 后起播
+                                10_000    // bufferForPlaybackAfterRebufferMs — 卡顿恢复缓冲 10s
+                        )
+                        .setPrioritizeTimeOverSizeThresholds(true)
+                        .build();
+                player.setLoadControl(loadControl);
+                return player;
+            }
+        });
         mSettings = new StarPlayerSettings(getContext());
         loadSettings();
         setupController();
@@ -448,6 +489,64 @@ public class StarVideoPlayer extends VideoView {
     public void setOnDownSetClickListener(OnDownSetClickListener l) { mOnDownSetClickListener = l; }
 
     // ── 工具 ──
+
+    // ── 磁盘缓存 ──
+
+    private static volatile SimpleCache sCache;
+
+    private static void setupDiskCache(Context context) {
+        if (sCache != null) return;
+        try {
+            ExoMediaSourceHelper helper = ExoMediaSourceHelper.getInstance(context);
+            sCache = new SimpleCache(
+                    new java.io.File(context.getCacheDir(), "exo-cache"),
+                    new LeastRecentlyUsedCacheEvictor(200 * 1024 * 1024),
+                    new StandaloneDatabaseProvider(context));
+            helper.setCache(sCache);
+        } catch (Exception ignored) {}
+    }
+
+    // ── OkHttp 单例 + 注入 ──
+
+    private static volatile OkHttpClient sOkHttpClient;
+
+    private static OkHttpClient getOkHttpClient(Context context) {
+        if (sOkHttpClient == null) {
+            synchronized (StarVideoPlayer.class) {
+                if (sOkHttpClient == null) {
+                    String userAgent = Util.getUserAgent(context.getApplicationContext(), "DKVideoPlayer");
+                    Dispatcher dispatcher = new Dispatcher();
+                    dispatcher.setMaxRequests(64);
+                    dispatcher.setMaxRequestsPerHost(32);
+                    sOkHttpClient = new OkHttpClient.Builder()
+                            .connectTimeout(10, TimeUnit.SECONDS)
+                            .readTimeout(30, TimeUnit.SECONDS)
+                            .dispatcher(dispatcher)
+                            .protocols(Arrays.asList(Protocol.HTTP_2, Protocol.HTTP_1_1))
+                            .connectionPool(new okhttp3.ConnectionPool(32, 5, TimeUnit.MINUTES))
+                            .addInterceptor(chain -> {
+                                Request req = chain.request().newBuilder()
+                                        .header("User-Agent", userAgent)
+                                        .build();
+                                return chain.proceed(req);
+                            })
+                            .build();
+                }
+            }
+        }
+        return sOkHttpClient;
+    }
+
+    private static void injectOkHttp(Context context) {
+        try {
+            ExoMediaSourceHelper helper = ExoMediaSourceHelper.getInstance(context);
+            Field field = ExoMediaSourceHelper.class.getDeclaredField("mHttpDataSourceFactory");
+            field.setAccessible(true);
+            field.set(helper, new OkHttpDataSource.Factory(getOkHttpClient(context)));
+        } catch (Exception ignored) {
+            // OkHttp 不可用时回退到 DefaultHttpDataSource
+        }
+    }
 
     private String formatSkipTime(int seconds) {
         int min = seconds / 60, sec = seconds % 60;

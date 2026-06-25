@@ -32,8 +32,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import xyz.doikki.videoplayer.exo.ExoMediaPlayerFactory;
 import xyz.doikki.videoplayer.ijk.IjkPlayerFactory;
+
 
 public class MainActivity extends AppCompatActivity {
     private StarVideoPlayer videoView;
@@ -63,8 +63,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         videoView = findViewById(R.id.player);
         DLNACastManager.getInstance().init(this);
-        // 设置初始播放内核
-        videoView.setPlayerFactory(ExoMediaPlayerFactory.create());
 
         // 设置视频地址
         videoView.setUrl(URL);

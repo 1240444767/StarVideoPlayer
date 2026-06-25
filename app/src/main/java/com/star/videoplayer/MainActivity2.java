@@ -19,8 +19,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import xyz.doikki.videoplayer.exo.ExoMediaPlayerFactory;
 import xyz.doikki.videoplayer.ijk.IjkPlayerFactory;
+
 
 public class MainActivity2 extends AppCompatActivity {
     private StarShortDramaPlayer videoView;
@@ -31,7 +31,6 @@ public class MainActivity2 extends AppCompatActivity {
         DynamicColors.applyToActivityIfAvailable(this);
         setContentView(R.layout.activity_main2);
         videoView = findViewById(R.id.video_player);
-        videoView.setPlayerFactory(ExoMediaPlayerFactory.create());
         videoView.setUrl(URL);
         videoView.addDefaultControlComponent("短剧", false);
         videoView.start();

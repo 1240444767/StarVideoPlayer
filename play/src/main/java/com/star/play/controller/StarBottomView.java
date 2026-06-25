@@ -119,6 +119,29 @@ public class StarBottomView extends FrameLayout implements IControlComponent {
 
         setupNormalListeners();
         setupFullscreenListeners();
+        applyBufferedProgressAlpha();
+    }
+
+    private void applyBufferedProgressAlpha() {
+        applyLayerAlpha(nSeekBar != null ? nSeekBar.getProgressDrawable() : null);
+        applyLayerAlpha(fSeekBar != null ? fSeekBar.getProgressDrawable() : null);
+        applyLayerAlpha(mBottomProgress != null ? mBottomProgress.getProgressDrawable() : null);
+    }
+
+    private void applyLayerAlpha(android.graphics.drawable.Drawable drawable) {
+        if (drawable == null) return;
+        try {
+            android.graphics.drawable.LayerDrawable ld =
+                    (android.graphics.drawable.LayerDrawable) drawable.mutate();
+            // 背景 55% 透明度
+            android.graphics.drawable.Drawable bg =
+                    ld.findDrawableByLayerId(android.R.id.background);
+            if (bg != null) bg.setAlpha(140);
+            // 缓冲条 55% 透明度
+            android.graphics.drawable.Drawable buf =
+                    ld.findDrawableByLayerId(android.R.id.secondaryProgress);
+            if (buf != null) buf.setAlpha(140);
+        } catch (Exception ignored) {}
     }
 
     // ═══════════════════════════════════════════════

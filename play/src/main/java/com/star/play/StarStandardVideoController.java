@@ -17,6 +17,7 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.star.play.controller.StarBottomView;
 import com.star.play.controller.StarCompleteView;
+import xyz.doikki.videoplayer.controller.IControlComponent;
 import com.star.play.controller.StarCutoutHelper;
 import com.star.play.controller.StarErrorView;
 import com.star.play.controller.StarGestureView;
@@ -41,6 +42,10 @@ public class StarStandardVideoController extends GestureVideoController implemen
     private TextView mSpeedTextView;
 
     private boolean mIsBuffering;
+
+    // ── 缓冲进度 ──
+    private Runnable mBufferedRunnable;
+    private StarBottomView mBottomView;
 
     private OnSpeedListener mOnSpeedListener;
     private OnCancelSpeedListener mOnCancelSpeedListener;
@@ -89,6 +94,16 @@ public class StarStandardVideoController extends GestureVideoController implemen
 
         mLockButton.setOnClickListener(this);
         mLoadingIndicator.setVisibility(GONE);
+
+        mBufferedRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (mControlWrapper != null && mBottomView != null) {
+                    mBottomView.setBufferedProgress(mControlWrapper.getBufferedPercentage());
+                }
+                postDelayed(this, 500);
+            }
+        };
     }
 
     /**
@@ -212,7 +227,7 @@ public class StarStandardVideoController extends GestureVideoController implemen
         super.onPlayerStateChanged(playerState);
         switch (playerState) {
             case VideoView.PLAYER_NORMAL:
-                mShowing = true;
+                show();
                 mLockButton.setVisibility(GONE);
                 break;
             case VideoView.PLAYER_FULL_SCREEN:
@@ -234,6 +249,7 @@ public class StarStandardVideoController extends GestureVideoController implemen
             case VideoView.STATE_IDLE:
                 mLockButton.setSelected(false);
                 mLoadingIndicator.setVisibility(GONE);
+                removeCallbacks(mBufferedRunnable);
                 break;
             case VideoView.STATE_PLAYING:
             case VideoView.STATE_PAUSED:
@@ -250,6 +266,17 @@ public class StarStandardVideoController extends GestureVideoController implemen
                         mShowing = true;
                     }
                 }
+                // 播放 / 暂停 / 就绪 / 缓冲结束后都刷新缓冲进度
+                if (playState == VideoView.STATE_PLAYING
+                        || playState == VideoView.STATE_PAUSED
+                        || playState == VideoView.STATE_PREPARED
+                        || playState == VideoView.STATE_BUFFERED) {
+                    if (mBottomView == null) findBottomView();
+                    if (mBufferedRunnable != null) {
+                        removeCallbacks(mBufferedRunnable);
+                        post(mBufferedRunnable);
+                    }
+                }
                 break;
             case VideoView.STATE_PREPARING:
                 mLoadingIndicator.setVisibility(VISIBLE);
@@ -257,11 +284,18 @@ public class StarStandardVideoController extends GestureVideoController implemen
             case VideoView.STATE_BUFFERING:
                 mLoadingIndicator.setVisibility(VISIBLE);
                 mIsBuffering = true;
+                // 立即更新缓冲进度
+                if (mBottomView == null) findBottomView();
+                if (mControlWrapper != null && mBottomView != null) {
+                    mBottomView.setBufferedProgress(mControlWrapper.getBufferedPercentage());
+                }
+                removeCallbacks(mBufferedRunnable);
                 break;
             case VideoView.STATE_PLAYBACK_COMPLETED:
                 mLoadingIndicator.setVisibility(GONE);
                 mLockButton.setVisibility(GONE);
                 mLockButton.setSelected(false);
+                removeCallbacks(mBufferedRunnable);
                 break;
         }
     }
@@ -277,5 +311,22 @@ public class StarStandardVideoController extends GestureVideoController implemen
             return stopFullScreen();
         }
         return super.onBackPressed();
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        removeCallbacks(mBufferedRunnable);
+    }
+
+    private void findBottomView() {
+        if (mControlComponents != null) {
+            for (IControlComponent c : mControlComponents.keySet()) {
+                if (c instanceof StarBottomView) {
+                    mBottomView = (StarBottomView) c;
+                    break;
+                }
+            }
+        }
     }
 }
